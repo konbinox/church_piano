@@ -959,11 +959,11 @@ input[type=range] {
         <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap">
 
           <!-- 和弦 + 音符 -->
-          <div style="display:flex;align-items:baseline;gap:12px;min-width:160px">
-            <div id="prac-chord" style="font-family:'Libre Baskerville',serif;font-size:64px;font-weight:700;color:#f0b429;line-height:1;text-shadow:0 0 20px rgba(240,180,41,0.3)">C</div>
+          <div style="display:flex;align-items:baseline;gap:12px;min-width:180px">
+            <div id="prac-chord" style="font-family:'Libre Baskerville',serif;font-size:80px;font-weight:700;color:#f0b429;line-height:1;text-shadow:0 0 20px rgba(240,180,41,0.3)">C</div>
             <div>
-              <div id="prac-fn"    style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a7a94">I 级 · 主和弦</div>
-              <div id="prac-notes" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:#3ddc84;margin-top:3px">C – E – G</div>
+              <div id="prac-fn"    style="font-family:'Share Tech Mono',monospace;font-size:15px;color:#5a7a94">I 级 · 主和弦</div>
+              <div id="prac-notes" style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#3ddc84;margin-top:4px">C – E – G</div>
             </div>
           </div>
 
@@ -1002,13 +1002,13 @@ input[type=range] {
         </div>
 
         <!-- 第二行：和弦进行条 + 播放按钮 -->
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:#080c10;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto">
-          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px;white-space:nowrap">和弦进行</span>
-          <div id="prac-chord-row" style="display:flex;gap:6px;flex:1;flex-wrap:wrap"></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#080c10;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text-dim);letter-spacing:2px;white-space:nowrap">和弦进行</span>
+          <div id="prac-chord-row" style="display:flex;gap:8px;flex:1;flex-wrap:wrap"></div>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            <button onclick="startPracPlay()" id="prac-play-btn" class="btn btn-green">▶ 开始</button>
-            <button onclick="stopPracPlay()"  class="btn">◼ 停止</button>
-            <button onclick="loopChords()"    class="btn btn-gold" id="prac-loop-btn">⟳ 循环</button>
+            <button onclick="togglePracPlay()" id="prac-play-btn" class="btn btn-green" style="font-size:14px;padding:8px 20px">▶ 开始</button>
+            <button onclick="stopPracPlay()"   class="btn"         style="font-size:14px;padding:8px 16px">◼ 停止</button>
+            <button onclick="loopChords()"     class="btn btn-gold" id="prac-loop-btn" style="font-size:14px;padding:8px 16px">⟳ 循环</button>
           </div>
         </div>
 
@@ -1022,11 +1022,122 @@ input[type=range] {
             <span style="color:#3ddc84">█ 绿=和弦音</span>
           </div>
 
-          <!-- 61键盘 iframe -->
+          <!-- 61键盘 iframe srcdoc (内嵌，无需外部文件) -->
           <div style="width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:4px;">
-            <iframe id="kb61-frame" src="kb61.html"
+            <iframe id="kb61-frame"
+              srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;style&gt;
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#060a0f; overflow-x:auto; overflow-y:hidden; }
+canvas { display:block; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;
+&lt;script&gt;
+const WW=24, BW=15, WH=100, BH=62;
+const START=36, END=96;
+const BLACK=new Set([1,3,6,8,10]);
+const NAMES=[&#x27;C&#x27;,&#x27;C#&#x27;,&#x27;D&#x27;,&#x27;D#&#x27;,&#x27;E&#x27;,&#x27;F&#x27;,&#x27;F#&#x27;,&#x27;G&#x27;,&#x27;G#&#x27;,&#x27;A&#x27;,&#x27;A#&#x27;,&#x27;B&#x27;];
+
+let rootNotes=[], chordNotes=[], lhNote=-1;
+
+function getLayout() {
+  const L=[]; let wx=0;
+  for(let m=START;m&lt;=END;m++){
+    const pc=m%12, isB=BLACK.has(pc);
+    if(isB){ L.push({m,isB:true, x:wx-BW/2}); }
+    else   { L.push({m,isB:false,x:wx}); wx+=WW; }
+  }
+  return L;
+}
+
+const layout = getLayout();
+const totalW = layout.filter(k=&gt;!k.isB).length * WW;
+
+function draw() {
+  const c=document.getElementById(&#x27;c&#x27;);
+  c.width=totalW; c.height=WH+10;
+  c.style.width=totalW+&#x27;px&#x27;; c.style.height=(WH+10)+&#x27;px&#x27;;
+  const ctx=c.getContext(&#x27;2d&#x27;);
+
+  ctx.fillStyle=&#x27;#1a1a2a&#x27;;
+  ctx.fillRect(0,0,totalW,WH+10);
+
+  // White keys
+  layout.filter(k=&gt;!k.isB).forEach(k=&gt;{
+    const isLH=lhNote===k.m, isR=rootNotes.includes(k.m), isC=chordNotes.includes(k.m);
+    const g=ctx.createLinearGradient(k.x,0,k.x,WH);
+    if(isLH){g.addColorStop(0,&#x27;#4a9eff&#x27;);g.addColorStop(1,&#x27;#1a5aaa&#x27;);}
+    else if(isR){g.addColorStop(0,&#x27;#f0b429&#x27;);g.addColorStop(1,&#x27;#c08010&#x27;);}
+    else if(isC){g.addColorStop(0,&#x27;#3ddc84&#x27;);g.addColorStop(1,&#x27;#1a8a4a&#x27;);}
+    else{g.addColorStop(0,&#x27;#d8d8d8&#x27;);g.addColorStop(1,&#x27;#f0f0f0&#x27;);}
+    ctx.fillStyle=g;
+    ctx.fillRect(k.x,0,WW-1,WH);
+    ctx.strokeStyle=&#x27;#888&#x27;; ctx.lineWidth=1;
+    ctx.strokeRect(k.x+.5,.5,WW-1.5,WH-.5);
+    const pc=k.m%12, oct=Math.floor(k.m/12)-1;
+    if(pc===0||isLH||isR||isC){
+      ctx.fillStyle=(isLH||isR||isC)?&#x27;rgba(0,0,0,.75)&#x27;:&#x27;rgba(0,0,0,.35)&#x27;;
+      ctx.font=&#x27;bold 8px monospace&#x27;; ctx.textAlign=&#x27;center&#x27;;
+      ctx.fillText(pc===0?`C${oct}`:NAMES[pc], k.x+WW/2, WH-4);
+    }
+  });
+
+  // Black keys
+  layout.filter(k=&gt;k.isB).forEach(k=&gt;{
+    const isLH=lhNote===k.m, isR=rootNotes.includes(k.m), isC=chordNotes.includes(k.m);
+    const g=ctx.createLinearGradient(k.x,0,k.x,BH);
+    if(isLH){g.addColorStop(0,&#x27;#4a9eff&#x27;);g.addColorStop(1,&#x27;#0a3070&#x27;);}
+    else if(isR){g.addColorStop(0,&#x27;#c08010&#x27;);g.addColorStop(1,&#x27;#7a4000&#x27;);}
+    else if(isC){g.addColorStop(0,&#x27;#1a8a4a&#x27;);g.addColorStop(1,&#x27;#0a4020&#x27;);}
+    else{g.addColorStop(0,&#x27;#222&#x27;);g.addColorStop(1,&#x27;#444&#x27;);}
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.rect(k.x,0,BW,BH);
+    ctx.fill();
+    if(isLH||isR||isC){
+      ctx.shadowColor=isLH?&#x27;#4a9eff&#x27;:isR?&#x27;#f0b429&#x27;:&#x27;#3ddc84&#x27;;
+      ctx.shadowBlur=10; ctx.fill(); ctx.shadowBlur=0;
+    }
+  });
+}
+
+// Click handler
+document.addEventListener(&#x27;click&#x27;, e=&gt;{
+  const c=document.getElementById(&#x27;c&#x27;);
+  const rect=c.getBoundingClientRect();
+  const sx=c.width/rect.width;
+  const cx=(e.clientX-rect.left)*sx;
+  const cy=(e.clientY-rect.top)*(c.height/rect.height);
+  let hit=null;
+  for(const k of layout){ if(k.isB&amp;&amp;cx&gt;=k.x&amp;&amp;cx&lt;=k.x+BW&amp;&amp;cy&lt;=BH){hit=k;break;} }
+  if(!hit){ for(const k of layout){ if(!k.isB&amp;&amp;cx&gt;=k.x&amp;&amp;cx&lt;=k.x+WW&amp;&amp;cy&lt;=WH){hit=k;break;} } }
+  if(hit) window.parent.postMessage({type:&#x27;kb61click&#x27;,midi:hit.m},&#x27;*&#x27;);
+});
+
+// Listen for chord updates from parent
+window.addEventListener(&#x27;message&#x27;, e=&gt;{
+  if(e.data &amp;&amp; e.data.type===&#x27;kb61update&#x27;){
+    rootNotes  = e.data.rootNotes  || [];
+    chordNotes = e.data.chordNotes || [];
+    lhNote     = e.data.lhNote     ?? -1;
+    draw();
+  }
+});
+
+// Initial draw
+draw();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"
               style="display:block;width:1490px;height:118px;border:none;background:#060a0f;"
               scrolling="no"></iframe>
+          </div>
           </div>
 
           <!-- 键盘标注 -->
@@ -2411,6 +2522,12 @@ function build61Keys(rootNotes, chordNotes, lhNote) {
 
 // Receive click events from iframe
 window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'kb61ready') {
+    // iframe loaded — send current chord immediately
+    const chord = document.getElementById('prac-chord')?.textContent || (currentHymn.chords?.[0] || 'C');
+    setTimeout(() => updatePracDisplay(chord), 30);
+    return;
+  }
   if (e.data && e.data.type === 'kb61click') {
     const midi = e.data.midi;
     if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
@@ -2576,7 +2693,7 @@ function buildPracChordRow() {
     const div = document.createElement('div');
     div.id = 'pcr-' + ch;
     div.textContent = ch;
-    div.style.cssText = 'padding:5px 12px;background:transparent;border:1px solid #1a3a20;border-radius:2px;font-family:Libre Baskerville,serif;font-size:18px;color:#5a8a6a;cursor:pointer;transition:all 0.15s;flex-shrink:0';
+    div.style.cssText = 'padding:8px 18px;background:transparent;border:1px solid #1a3a20;border-radius:2px;font-family:Libre Baskerville,serif;font-size:22px;color:#5a8a6a;cursor:pointer;transition:all 0.15s;flex-shrink:0';
     div.onclick = () => {
       updatePracDisplay(ch);
       // 发声预览
@@ -2597,20 +2714,26 @@ let pracChordIdx2 = 0;
 
 function startPracPlay() {
   stopPracPlay();
-  pracPlaying = true;
+  // 确保 AudioContext 在用户手势里创建
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  pracPlaying  = true;
   pracMeasBeat = 0;
   pracChordIdx2 = 0;
-  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if (audioCtx.state==='suspended') audioCtx.resume();
-  document.getElementById('prac-play-btn').className = 'btn btn-green active';
+  const btn = document.getElementById('prac-play-btn');
+  if (btn) { btn.textContent = '⏸ 暂停'; btn.style.borderColor = '#3ddc84'; }
   tickPracPlay();
 }
 
 function stopPracPlay() {
   pracPlaying = false;
-  if (pracPlayTimer) clearTimeout(pracPlayTimer);
+  if (pracPlayTimer) { clearTimeout(pracPlayTimer); pracPlayTimer = null; }
   const btn = document.getElementById('prac-play-btn');
-  if (btn) btn.className = 'btn btn-green';
+  if (btn) { btn.textContent = '▶ 开始'; btn.style.borderColor = ''; }
+}
+
+function togglePracPlay() {
+  if (pracPlaying) stopPracPlay(); else startPracPlay();
 }
 
 function tickPracPlay() {
@@ -2618,38 +2741,42 @@ function tickPracPlay() {
   const interval = (60 / bpm) * 1000;
   const beatsPerMeasure = currentHymn.time === '3/4' ? 3 : 4;
   const chords = currentHymn.chords || ['C'];
+
   const chord = chords[pracChordIdx2 % chords.length];
   const v = getPracVoicing(chord);
 
-  // 换小节时更新显示
+  // 小节开头更新显示和键盘
   if (pracMeasBeat === 0) updatePracDisplay(chord);
 
-  // 脉冲 + 拍格
+  // 节奏脉冲 + 拍格闪光
   litPracBeat(pracMeasBeat);
 
-  // 发音
+  // 发音模式
   const beats4 = {
-    block:    [[v.lh, ...v.rh], [], [], []],
-    arpeggio: [[v.lh, v.rh[0]], [v.rh[1]], [v.rh[2]], [v.rh[1]]],
-    rhythm:   [[v.lh], v.rh, v.rh, []],
+    block:    [ [v.lh, ...v.rh], [],          [],          []          ],
+    arpeggio: [ [v.lh, v.rh[0]], [v.rh[1]],   [v.rh[2]],   [v.rh[1]]  ],
+    rhythm:   [ [v.lh],          [...v.rh],    [...v.rh],   []          ],
   };
-  const pattern = beats4[pracStyle] || beats4.block;
-  const toPlay = pattern[pracMeasBeat % pattern.length] || [];
-  const dur = interval * 0.80;
+  const pattern  = beats4[pracStyle] || beats4.block;
+  const toPlay   = pattern[pracMeasBeat % beatsPerMeasure] || [];
+  const dur      = interval * 0.82;
+
   toPlay.forEach(n => {
-    if (outputMode !== 'midi') playWebAudio(n, dur);
+    if (typeof n !== 'number' || isNaN(n)) return;
+    playWebAudio(n, dur);
     if ((outputMode === 'midi' || outputMode === 'both') && midiOutput) playMIDINote(n, dur);
   });
 
+  // 推进拍子
   pracMeasBeat++;
   if (pracMeasBeat >= beatsPerMeasure) {
     pracMeasBeat = 0;
     pracChordIdx2++;
     if (pracChordIdx2 >= chords.length) {
-      if (pracLooping) pracChordIdx2 = 0;
-      else { stopPracPlay(); return; }
+      pracChordIdx2 = 0; // 始终循环，不自动停止
     }
   }
+
   pracPlayTimer = setTimeout(tickPracPlay, interval);
 }
 
@@ -2661,12 +2788,12 @@ function loopChords() {
   pracLoopActive = !pracLoopActive;
   const btn = document.getElementById('prac-loop-btn');
   if (pracLoopActive) {
-    btn.className = 'btn btn-gold active';
+    if (btn) { btn.className = 'btn btn-gold'; btn.style.borderColor = '#f0b429'; btn.textContent = '⟳ 循环中'; }
     pracLoopI = 0;
-    cycleNextChord();
+    // 如果没在播放，也启动播放
+    if (!pracPlaying) startPracPlay();
   } else {
-    btn.className = 'btn btn-gold';
-    if (pracLoopTimer) clearTimeout(pracLoopTimer);
+    if (btn) { btn.textContent = '⟳ 循环'; btn.style.borderColor = ''; }
   }
 }
 
