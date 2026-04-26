@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>智能钢琴学习系统 · 61键</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>🎹 智能钢琴学习系统</h1>
+            <div class="midi-status">
+                <span id="midiIndicator" class="indicator"></span>
+                <span id="midiStatusText">MIDI 未连接</span>
+                <button id="requestMidiBtn" class="small-btn">🎛️ 请求MIDI权限</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="top-panel">
+                <div class="score-area" id="scoreArea">
+                    <!-- 五线谱+简谱画布 -->
+                    <canvas id="staffCanvas" width="800" height="200"></canvas>
+                    <div id="jpuArea" class="jpu-text"></div>
+                </div>
+                <div class="control-bar">
+                    <button id="playBtn" class="ctrl-btn">▶ 播放</button>
+                    <button id="stopBtn" class="ctrl-btn">⏹️ 停止</button>
+                    <button id="recordBtn" class="ctrl-btn">🔴 录音</button>
+                    <label>🎵 曲目:
+                        <select id="hymnSelect"></select>
+                    </label>
+                    <label>🎚️ 速度:
+                        <input type="range" id="tempoSlider" min="40" max="200" value="100">
+                        <span id="tempoValue">100</span> BPM
+                    </label>
+                </div>
+            </div>
+
+            <div class="middle-panel">
+                <div class="keyboard-container">
+                    <iframe id="kbFrame" src="kb61.html" title="61键钢琴键盘"></iframe>
+                </div>
+            </div>
+
+            <div class="bottom-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="practice">✋ 弹法练习</button>
+                    <button class="tab-btn" data-tab="ai">🤖 AI辅导</button>
+                    <button class="tab-btn" data-tab="roll">📊 卷帘视图</button>
+                </div>
+                <div id="practiceTab" class="tab-content active">
+                    <div id="practicePanel">等待练习模块加载...</div>
+                </div>
+                <div id="aiTab" class="tab-content">
+                    <div id="aiPanel">AI 辅导模块就绪</div>
+                </div>
+                <div id="rollTab" class="tab-content">
+                    <canvas id="rollCanvas" width="800" height="300"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/hymns.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/midi.js"></script>
+    <script src="js/score.js"></script>
+    <script src="js/keyboard.js"></script>
+    <script src="js/practice.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
