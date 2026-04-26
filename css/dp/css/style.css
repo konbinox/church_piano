@@ -1,0 +1,133 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #1e1e2a;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 1.6rem;  /* 基准放大1.6倍 */
+    color: #eee;
+}
+
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.2rem;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    background: #2a2a36;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2rem;
+}
+
+h1 {
+    font-size: 2.2rem;
+    margin: 0;
+}
+
+.midi-status {
+    font-size: 1rem;
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #555;
+    display: inline-block;
+}
+.indicator.active {
+    background: #0f0;
+    box-shadow: 0 0 6px #0f0;
+}
+
+.small-btn, button, .ctrl-btn, .tab-btn {
+    background: #3a3a4a;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    transition: 0.1s;
+}
+button:hover {
+    background: #5a6e8a;
+    transform: scale(0.98);
+}
+
+.control-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    background: #2a2a36;
+    padding: 1rem;
+    border-radius: 2rem;
+    margin: 1rem 0;
+}
+select, input {
+    font-size: 1rem;
+    padding: 0.3rem;
+    border-radius: 1rem;
+}
+
+.score-area {
+    background: #fef9e6;
+    border-radius: 2rem;
+    padding: 1rem;
+    color: #222;
+}
+#staffCanvas {
+    background: #fff8e7;
+    border-radius: 1.5rem;
+    width: 100%;
+    height: auto;
+}
+.jpu-text {
+    font-size: 1.4rem;
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.keyboard-container iframe {
+    width: 100%;
+    height: 210px;
+    border: none;
+    border-radius: 2rem;
+    background: #2c2c3a;
+    margin-top: 0.5rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0 0.5rem;
+}
+.tab-content {
+    display: none;
+    background: #262633;
+    padding: 1rem;
+    border-radius: 1.5rem;
+    min-height: 220px;
+}
+.tab-content.active {
+    display: block;
+}
+#rollCanvas, #staffCanvas {
+    width: 100%;
+    background: #2a2a30;
+    border-radius: 1rem;
+}
