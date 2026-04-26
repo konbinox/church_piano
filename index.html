@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教会钢琴练习系统 Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e14;
+  --surface: #111820;
+  --surface2: #161e28;
+  --border: #1e2d3d;
+  --border2: #243040;
+  --green: #3ddc84;
+  --green-dim: #1a6e40;
+  --green-glow: rgba(61,220,132,0.15);
+  --gold: #f0b429;
+  --gold-dim: #7a5c10;
+  --blue: #4a9eff;
+  --blue-dim: #1a3a6e;
+  --red: #ff5c5c;
+  --text: #c8d8e8;
+  --text-dim: #5a7a94;
+  --text-bright: #e8f4ff;
+  --accent: #00d4ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid scanline effect */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.3;
+}
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-cross {
+  width: 32px; height: 32px;
+  border: 2px solid var(--green);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green);
+  font-size: 18px;
+  box-shadow: 0 0 12px var(--green-glow);
+}
+
+.logo-text {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 16px;
+  color: var(--text-bright);
+  letter-spacing: 0.5px;
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.status-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  border: 1px solid;
+}
+
+.pill-off { border-color: var(--border2); color: var(--text-dim); background: transparent; }
+.pill-on  { border-color: var(--green-dim); color: var(--green); background: rgba(61,220,132,0.08); }
+.pill-warn{ border-color: #5a4010; color: var(--gold); background: rgba(240,180,41,0.08); }
+
+/* ===== LAYOUT ===== */
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  grid-template-rows: auto;
+  gap: 0;
+  height: calc(100vh - 57px);
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .sidebar-right { display: none; }
+}
+
+/* ===== SIDEBAR LEFT ===== */
+.sidebar-left {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.section-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 8px 4px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.hymn-item {
+  padding: 10px 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+}
+
+.hymn-item:hover { background: var(--surface2); border-color: var(--border2); }
+.hymn-item.active {
+  background: rgba(61,220,132,0.06);
+  border-color: var(--green-dim);
+}
+
+.hymn-item .h-name { font-size: 13px; color: var(--text-bright); font-weight: 500; }
+.hymn-item .h-en   { font-size: 10px; color: var(--text-dim); margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
+.hymn-item .h-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+
+.tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 1px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.tag-C  { background: rgba(74,158,255,0.12); color: #7ab8ff; border: 1px solid #1a3a6e; }
+.tag-G  { background: rgba(61,220,132,0.1);  color: #6ddaa0; border: 1px solid #1a6e40; }
+.tag-F  { background: rgba(240,180,41,0.1);  color: #f0c060; border: 1px solid #7a5c10; }
+.tag-Bb { background: rgba(255,92,92,0.1);   color: #ff9090; border: 1px solid #6e1a1a; }
+.tag-D  { background: rgba(160,80,240,0.1);  color: #c090ff; border: 1px solid #4a1a8e; }
+
+/* ===== MAIN CENTER ===== */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ===== TAB BAR ===== */
+.tab-bar {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+}
+
+.tab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ===== SCORE PANEL ===== */
+.score-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content { display: none; flex: 1; overflow: hidden; }
+.tab-content.active { display: flex; flex-direction: column; flex: 1; }
+
+/* Five-line staff canvas */
+#staff-canvas {
+  width: 100%;
+  height: 120px;
+  flex-shrink: 0;
+  display: block;
+  background: #0c1218;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Jianpu (numbered notation) scrolling */
+.jianpu-wrap {
+  background: #0c1218;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.jianpu-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  white-space: nowrap;
+  /* remove transition — we'll scroll the wrapper instead */
+}
+
+.jianpu-beat {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.jianpu-num {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 20px;
+  color: var(--text-bright);
+  line-height: 1;
+  position: relative;
+  transition: color 0.12s;
+}
+
+.jianpu-num.active-beat { color: var(--green); text-shadow: 0 0 10px var(--green); }
+.jianpu-num.dot-above::before { content: '•'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-dim); }
+.jianpu-num.dot-below::after  { content: '•'; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-dim); }
+
+.jianpu-dur {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+.jianpu-chord {
+  font-size: 11px;
+  color: var(--gold);
+  font-family: 'Libre Baskerville', serif;
+  margin-bottom: 3px;
+  min-height: 15px;
+}
+
+/* MIDI / Piano Roll scroll — fills ALL remaining space */
+.midi-scroll-wrap {
+  flex: 1;
+  min-height: 0;        /* critical for flex children */
+  position: relative;
+  overflow: hidden;
+  background: #080c10;
+}
+
+#midi-canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* Chord overlay */
+.chord-overlay {
+  position: absolute;
+  top: 10px; right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.chord-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10,14,20,0.85);
+  border: 1px solid var(--border2);
+  padding: 8px 12px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+}
+
+.chord-root {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.chord-qual {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'Libre Baskerville', serif;
+  font-style: italic;
+}
+
+.chord-fn {
+  font-size: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+/* ===== TRANSPORT BAR ===== */
+.transport {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.transport-btn {
+  width: 36px; height: 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  border-radius: 2px;
+}
+
+.transport-btn:hover { border-color: var(--green-dim); color: var(--green); }
+.transport-btn.active { background: rgba(61,220,132,0.1); border-color: var(--green); color: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+
+.bpm-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.bpm-val {
+  font-size: 20px;
+  color: var(--text-bright);
+  min-width: 44px;
+  text-align: center;
+}
+
+input[type=range] {
+  accent-color: var(--green);
+  cursor: pointer;
+  width: 80px;
+}
+
+.time-display {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  margin-left: 4px;
+}
+
+.key-sel {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 6px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.key-sel:focus { border-color: var(--green-dim); }
+
+/* ===== SIDEBAR RIGHT ===== */
+.sidebar-right {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* LK-280 Panel */
+.lk-display {
+  background: #000;
+  border: 2px solid #222;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  color: #00ff88;
+  font-size: 12px;
+  line-height: 1.6;
+  text-shadow: 0 0 6px #00ff88;
+  min-height: 80px;
+}
+
+.lk-row { display: flex; justify-content: space-between; }
+
+.mini-keyboard {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  position: relative;
+  height: 50px;
+}
+
+.mk-white {
+  width: 16px; height: 50px;
+  background: linear-gradient(to bottom, #ddd, #fff);
+  border: 1px solid #999;
+  border-radius: 0 0 2px 2px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.mk-white.lit { background: linear-gradient(to bottom, #b8ff80, #e0ffb0); box-shadow: 0 0 6px rgba(100,255,80,0.5); }
+.mk-white.wrong { background: linear-gradient(to bottom, #ff8080, #ffb0b0); }
+
+.mk-black {
+  width: 10px; height: 32px;
+  background: #111;
+  border-radius: 0 0 2px 2px;
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.mk-black.lit { background: #60aa40; box-shadow: 0 0 4px rgba(100,220,80,0.6); }
+
+.mk-wrap { position: relative; }
+
+/* feedback row */
+.feedback-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.fb-icon { font-size: 14px; }
+.fb-label { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
+.fb-val { margin-left: auto; font-family: 'Share Tech Mono', monospace; color: var(--green); }
+
+/* Zoom panel */
+.zoom-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.zoom-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+  flex-shrink: 0;
+}
+
+.zoom-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.zoom-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+.zoom-quality-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.q-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: center;
+}
+
+.q-val { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: var(--text-bright); }
+.q-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.vumeter {
+  height: 8px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.vumeter-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--green), var(--gold), var(--red));
+  border-radius: 1px;
+  transition: width 0.1s;
+}
+
+.vumeter-label { font-size: 10px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; margin-bottom: 6px; }
+
+/* Chord progression panel */
+.chord-prog {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cp-chord {
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.cp-chord:hover { border-color: var(--gold-dim); color: var(--gold); }
+.cp-chord.current {
+  background: rgba(240,180,41,0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 8px rgba(240,180,41,0.2);
+}
+
+/* btn */
+.btn {
+  padding: 7px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.btn:hover { border-color: var(--green-dim); color: var(--green); }
+.btn-green { border-color: var(--green-dim); color: var(--green); background: rgba(61,220,132,0.06); }
+.btn-green:hover { background: rgba(61,220,132,0.12); }
+.btn-gold { border-color: var(--gold-dim); color: var(--gold); background: rgba(240,180,41,0.06); }
+
+/* practice style buttons */
+.psb {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.psb:hover { border-color: var(--gold-dim); color: var(--gold); }
+.active-psb { border-color: var(--gold) !important; color: var(--gold) !important; background: rgba(240,180,41,0.08) !important; }
+
+/* pulse dots */
+.pulse-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #0a1a14;
+  border: 2px solid #0f3020;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: #1a4a2a;
+  transition: all 0.08s;
+  flex-shrink: 0;
+}
+.big-dot { width: 48px; height: 48px; font-size: 14px; }
+.pulse-dot.beat-on-root  { background: rgba(240,180,41,0.2); border-color: #f0b429; color: #f0b429; transform: scale(1.15); }
+.pulse-dot.beat-on-chord { background: rgba(61,220,132,0.15); border-color: #3ddc84; color: #3ddc84; transform: scale(1.05); }
+
+/* 61-key piano */
+.k61-white {
+  width: 24px; height: 100px;
+  background: linear-gradient(to bottom, #ddd 0%, #f5f5f5 100%);
+  border: 1px solid #888;
+  border-radius: 0 0 4px 4px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.k61-white.k-root  { background: linear-gradient(to bottom, #f0b429, #c08010); border-color: #f0b429; box-shadow: 0 0 8px rgba(240,180,41,0.6); }
+.k61-white.k-chord { background: linear-gradient(to bottom, #3ddc84, #1a8a4a); border-color: #3ddc84; box-shadow: 0 0 8px rgba(61,220,132,0.5); }
+.k61-white.k-lh    { background: linear-gradient(to bottom, #4a9eff, #1a5aaa); border-color: #4a9eff; box-shadow: 0 0 8px rgba(74,158,255,0.5); }
+.k61-black {
+  position: absolute;
+  top: 0;
+  width: 15px; height: 62px;
+  background: #111;
+  border-radius: 0 0 3px 3px;
+  z-index: 2;
+  cursor: pointer;
+  left: 16px;
+}
+.k61-black.k-root  { background: linear-gradient(to bottom,#c08010,#8a5000); box-shadow: 0 0 6px rgba(240,180,41,0.7); }
+.k61-black.k-chord { background: linear-gradient(to bottom,#1a8a4a,#0a5030); box-shadow: 0 0 6px rgba(61,220,132,0.6); }
+.k61-black.k-lh    { background: linear-gradient(to bottom,#1a5aaa,#0a3070); box-shadow: 0 0 6px rgba(74,158,255,0.6); }
+
+.k61-label {
+  position: absolute;
+  bottom: 4px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  color: rgba(0,0,0,0.45);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.k61-white.k-root .k61-label,
+.k61-white.k-chord .k61-label,
+.k61-white.k-lh .k61-label { color: rgba(0,0,0,0.75); font-weight: bold; }
+
+/* beat cell for practice tab */
+.prac-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 48px;
+}
+.prac-note {
+  width: 40px; height: 40px;
+  border-radius: 3px;
+  border: 2px solid #1e2d3d;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: #3a5a4a;
+  background: #0a1218;
+  transition: all 0.08s;
+}
+.prac-note.on-root  { background: rgba(240,180,41,0.18); border-color: #f0b429; color: #f0b429; box-shadow: 0 0 8px rgba(240,180,41,0.3); }
+.prac-note.on-chord { background: rgba(61,220,132,0.14); border-color: #3ddc84; color: #3ddc84; box-shadow: 0 0 6px rgba(61,220,132,0.25); }
+.prac-note.on-rest  { border-color: #141e28; color: #1e2d3d; }
+.prac-cell-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #2a4a3a; }
+
+/* exam overlay — keep but simplify */
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #243040;
+  color: #5a7a94;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.exam-style-btn:hover { border-color: #f0b429; color: #f0b429; }
+.active-esb { border-color: #f0b429 !important; color: #f0b429 !important; background: rgba(240,180,41,0.08) !important; }
+
+/* beat cell */
+.beat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 52px;
+}
+.beat-note {
+  width: 44px; height: 44px;
+  border-radius: 3px;
+  border: 2px solid #1e2d3d;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: #3a5a4a;
+  background: #0a1218;
+  transition: all 0.1s;
+}
+.beat-note.lit-root  { background: rgba(240,180,41,0.15); border-color: #f0b429; color: #f0b429; box-shadow: 0 0 10px rgba(240,180,41,0.3); }
+.beat-note.lit-chord { background: rgba(61,220,132,0.12); border-color: #3ddc84; color: #3ddc84; box-shadow: 0 0 8px rgba(61,220,132,0.25); }
+.beat-note.lit-rest  { background: transparent; border-color: #1e2d3d; color: #243040; }
+.beat-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #3a5a4a; letter-spacing: 1px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* AI chat */
+.ai-chat { display: flex; flex-direction: column; gap: 6px; }
+.ai-msg { padding: 8px 10px; border-radius: 2px; font-size: 12px; line-height: 1.6; }
+.ai-msg-user { background: rgba(74,158,255,0.08); border: 1px solid var(--blue-dim); color: var(--blue); text-align: right; }
+.ai-msg-ai { background: rgba(61,220,132,0.05); border: 1px solid var(--green-dim); color: var(--text); }
+
+.ai-input-row { display: flex; gap: 6px; margin-top: 6px; }
+.ai-inp {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 7px 10px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  border-radius: 2px;
+  outline: none;
+}
+
+.ai-inp:focus { border-color: var(--green-dim); }
+.ai-inp::placeholder { color: var(--text-dim); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+.fade-up { animation: fadeUp 0.3s ease; }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-cross">✝</div>
+    <div>
+      <div class="logo-text">教会钢琴练习系统 Pro</div>
+      <div class="logo-sub">Church Piano · MIDI · Zoom · LK-280</div>
+    </div>
+  </div>
+  <div class="status-pills">
+    <div class="pill pill-off" id="pill-midi">⬤ MIDI 未连接</div>
+    <div class="pill pill-warn" id="pill-lk">⬤ LK-280</div>
+    <div class="pill pill-off" id="pill-zoom">⬤ Zoom 待机</div>
+    <div class="pill pill-on">⬤ AI 就绪</div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- LEFT: HYMN LIST -->
+  <div class="sidebar-left">
+    <div class="section-title">曲目库</div>
+
+    <!-- ★ 作业曲目 -->
+    <div class="section-title" style="color:var(--gold);border-color:var(--gold-dim)">★ 本次作业</div>
+
+    <div class="hymn-item active" onclick="loadHymn('jesuslovesC')" id="h-jesuslovesC">
+      <div class="h-name">耶稣爱你 <span style="color:var(--green);font-size:11px">C调</span></div>
+      <div class="h-en">Jesus Loves You · C major</div>
+      <div class="h-tags"><span class="tag tag-C">C</span><span class="tag tag-C">I-IV-V</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('jesuslovesF')" id="h-jesuslovesF">
+      <div class="h-name">耶稣爱你 <span style="color:var(--gold);font-size:11px">F调</span></div>
+      <div class="h-en">Jesus Loves You · F major</div>
+      <div class="h-tags"><span class="tag tag-F">F</span><span class="tag tag-F">含Bb</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('jesuslovesG')" id="h-jesuslovesG">
+      <div class="h-name">耶稣爱你 <span style="color:var(--green);font-size:11px">G调</span></div>
+      <div class="h-en">Jesus Loves You · G major</div>
+      <div class="h-tags"><span class="tag tag-G">G</span><span class="tag tag-G">I-IV-V</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('doxology')" id="h-doxology">
+      <div class="h-name">三一颂 <span style="color:var(--accent);font-size:11px">三种弹法</span></div>
+      <div class="h-en">Doxology · 柱式/分解/节奏</div>
+      <div class="h-tags"><span class="tag tag-G">G</span><span class="tag tag-G">4/4</span></div>
+    </div>
+
+    <!-- 弹法切换（仅三一颂显示） -->
+    <div id="style-panel" style="display:none;margin:6px 0;padding:8px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:2px">
+      <div style="font-size:10px;color:var(--accent);letter-spacing:1.5px;margin-bottom:6px;font-family:'Share Tech Mono',monospace">弹法选择</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div class="style-btn active" onclick="setStyle('block')" id="sb-block"
+          style="padding:7px 10px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:2px;cursor:pointer;font-size:12px;color:var(--accent)">
+          ① 柱式　同时按下　庄重
+        </div>
+        <div class="style-btn" onclick="setStyle('arpeggio')" id="sb-arpeggio"
+          style="padding:7px 10px;background:transparent;border:1px solid var(--border2);border-radius:2px;cursor:pointer;font-size:12px;color:var(--text-dim)">
+          ② 分解　C→E→G→E　流动
+        </div>
+        <div class="style-btn" onclick="setStyle('rhythm')" id="sb-rhythm"
+          style="padding:7px 10px;background:transparent;border:1px solid var(--border2);border-radius:2px;cursor:pointer;font-size:12px;color:var(--text-dim)">
+          ③ 节奏　咚·哒哒　敬拜感
+        </div>
+      </div>
+      <div id="style-hint" style="margin-top:8px;font-size:11px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;line-height:1.7">
+        左手：根音单音<br>右手：三音柱式和弦
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:8px">其他曲目</div>
+    <div class="hymn-item" onclick="loadHymn('amazing')" id="h-amazing">
+      <div class="h-name">奇异恩典</div>
+      <div class="h-en">Amazing Grace</div>
+      <div class="h-tags"><span class="tag tag-G">G</span><span class="tag tag-G">3/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('father')" id="h-father">
+      <div class="h-name">这是天父世界</div>
+      <div class="h-en">This Is My Father's World</div>
+      <div class="h-tags"><span class="tag tag-C">C</span><span class="tag tag-G">3/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('gloria')" id="h-gloria">
+      <div class="h-name">荣耀归于圣父</div>
+      <div class="h-en">Gloria Patri</div>
+      <div class="h-tags"><span class="tag tag-F">F</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('holy')" id="h-holy">
+      <div class="h-name">圣哉圣哉圣哉</div>
+      <div class="h-en">Holy Holy Holy</div>
+      <div class="h-tags"><span class="tag tag-D">Bb</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('itiswell')" id="h-itiswell">
+      <div class="h-name">好像一道河</div>
+      <div class="h-en">It Is Well with My Soul</div>
+      <div class="h-tags"><span class="tag tag-Bb">Bb</span><span class="tag tag-G">4/4</span></div>
+    </div>
+    <div class="hymn-item" onclick="loadHymn('joyful')" id="h-joyful">
+      <div class="h-name">喜乐颂</div>
+      <div class="h-en">Joyful Joyful</div>
+      <div class="h-tags"><span class="tag tag-D">D</span><span class="tag tag-G">4/4</span></div>
+    </div>
+
+    <div class="section-title" style="margin-top:12px">练习模式</div>
+    <select class="key-sel" style="width:100%;margin-bottom:6px" id="mode-sel" onchange="setMode(this.value)">
+      <option value="accomp">伴奏织体</option>
+      <option value="chord">和弦进行</option>
+      <option value="rh">右手旋律</option>
+      <option value="lh">左手伴奏</option>
+      <option value="both">双手合并</option>
+      <option value="transpose">移调训练</option>
+    </select>
+
+    <div class="section-title" style="margin-top:12px">AI 辅导</div>
+    <div class="ai-chat" id="ai-chat">
+      <div class="ai-msg ai-msg-ai fade-up">选择曲目后，我可以帮你分析和弦、织体、移调方法。</div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-inp" id="ai-inp" placeholder="问题…" onkeydown="if(event.key==='Enter')sendAI()">
+      <button class="btn btn-green" onclick="sendAI()">问</button>
+    </div>
+  </div>
+
+  <!-- CENTER: MAIN SCORE -->
+  <div class="main">
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('score')">五线谱 + 简谱</div>
+      <div class="tab" onclick="switchTab('midi')">MIDI 滚动</div>
+      <div class="tab" onclick="switchTab('chord')">和弦图</div>
+      <div class="tab" onclick="switchTab('practice')" id="tab-btn-practice" style="color:var(--gold)">🎹 弹法练习</div>
+    </div>
+
+    <!-- TAB: SCORE -->
+    <div class="tab-content active" id="tab-score">
+      <!-- Staff canvas -->
+      <canvas id="staff-canvas" height="160"></canvas>
+
+      <!-- Jianpu scroll -->
+      <div class="jianpu-wrap">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">简谱</div>
+        <div class="jianpu-row" id="jianpu-row"></div>
+      </div>
+
+      <!-- Chord overlay + MIDI piano roll -->
+      <div class="midi-scroll-wrap">
+        <canvas id="piano-roll-canvas"></canvas>
+        <div class="chord-overlay" id="chord-overlay"></div>
+      </div>
+    </div>
+
+    <!-- TAB: MIDI -->
+    <div class="tab-content" id="tab-midi">
+      <div style="padding:20px;flex:1;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px">MIDI 设备</div>
+        <div id="midi-device-list" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;color:var(--text-dim);font-style:italic">正在扫描 MIDI 设备…</div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-top:4px">MIDI 输出设备</div>
+        <div id="midi-out-device-list" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;color:var(--text-dim);font-style:italic">未连接</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="requestMIDI()">🎹 连接 MIDI / LK-280</button>
+          <button class="btn" onclick="testMIDIOut()">▶ 测试输出音</button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.8">
+          输入（IN）：接收你弹的音 → 做对比反馈<br>
+          输出（OUT）：播放时发音给 LK-280<br>
+          m148USB：DIN MIDI OUT → LK-280 MIDI IN
+        </div>
+        <div style="margin-top:16px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px">MIDI LOG</div>
+        <div id="midi-log" style="background:#080c10;border:1px solid var(--border);padding:10px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#4a7a4a;height:200px;overflow-y:auto;line-height:1.8"></div>
+      </div>
+    </div>
+
+    <!-- TAB: CHORD -->
+    <div class="tab-content" id="tab-chord">
+      <div style="padding:20px;flex:1">
+        <div id="chord-detail-area" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
+      </div>
+    </div>
+
+    <!-- TAB: 弹法练习 ★ -->
+    <div class="tab-content" id="tab-practice">
+      <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+
+        <!-- 第一行：和弦大字 + 弹法 + 播放 -->
+        <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap">
+
+          <!-- 和弦 + 音符 -->
+          <div style="display:flex;align-items:baseline;gap:12px;min-width:160px">
+            <div id="prac-chord" style="font-family:'Libre Baskerville',serif;font-size:64px;font-weight:700;color:#f0b429;line-height:1;text-shadow:0 0 20px rgba(240,180,41,0.3)">C</div>
+            <div>
+              <div id="prac-fn"    style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a7a94">I 级 · 主和弦</div>
+              <div id="prac-notes" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:#3ddc84;margin-top:3px">C – E – G</div>
+            </div>
+          </div>
+
+          <!-- 分隔 -->
+          <div style="width:1px;height:50px;background:var(--border);flex-shrink:0"></div>
+
+          <!-- 弹法切换 -->
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px">弹法选择</div>
+            <div style="display:flex;gap:6px">
+              <button onclick="setPracStyle('block')"    id="psb-block"    class="psb active-psb">① 柱式</button>
+              <button onclick="setPracStyle('arpeggio')" id="psb-arpeggio" class="psb">② 分解</button>
+              <button onclick="setPracStyle('rhythm')"   id="psb-rhythm"   class="psb">③ 节奏</button>
+            </div>
+          </div>
+
+          <!-- 分隔 -->
+          <div style="width:1px;height:50px;background:var(--border);flex-shrink:0"></div>
+
+          <!-- 节奏脉冲圆 -->
+          <div style="display:flex;gap:6px;align-items:center">
+            <div id="pb1" class="pulse-dot big-dot">咚</div>
+            <div id="pb2" class="pulse-dot">哒</div>
+            <div id="pb3" class="pulse-dot">哒</div>
+            <div id="pb4" class="pulse-dot">哒</div>
+          </div>
+
+          <!-- 分隔 -->
+          <div style="width:1px;height:50px;background:var(--border);flex-shrink:0"></div>
+
+          <!-- 拍格 -->
+          <div id="prac-beat-cells" style="display:flex;gap:6px;align-items:center"></div>
+
+          <!-- 手型提示 -->
+          <div id="prac-hint" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a7a94;line-height:1.7;white-space:pre;margin-left:auto"></div>
+        </div>
+
+        <!-- 第二行：和弦进行条 + 播放按钮 -->
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:#080c10;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px;white-space:nowrap">和弦进行</span>
+          <div id="prac-chord-row" style="display:flex;gap:6px;flex:1;flex-wrap:wrap"></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="startPracPlay()" id="prac-play-btn" class="btn btn-green">▶ 开始</button>
+            <button onclick="stopPracPlay()"  class="btn">◼ 停止</button>
+            <button onclick="loopChords()"    class="btn btn-gold" id="prac-loop-btn">⟳ 循环</button>
+          </div>
+        </div>
+
+        <!-- 底部：61键盘撑满剩余空间 -->
+        <div style="flex:1;min-height:140px;height:140px;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;padding:12px;background:#060a0f;overflow:auto">
+
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;width:100%;text-align:center">
+            LK-280 · 61键 &nbsp;·&nbsp;
+            <span style="color:#4a9eff">█ 蓝=左手根音</span> &nbsp;
+            <span style="color:#f0b429">█ 金=右手根音</span> &nbsp;
+            <span style="color:#3ddc84">█ 绿=和弦音</span>
+          </div>
+
+          <!-- 61键盘 iframe -->
+          <div style="width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:4px;">
+            <iframe id="kb61-frame" src="kb61.html"
+              style="display:block;width:1490px;height:118px;border:none;background:#060a0f;"
+              scrolling="no"></iframe>
+          </div>
+
+          <!-- 键盘标注 -->
+          <div style="margin-top:10px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);text-align:center;width:100%" id="kb61-label"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TRANSPORT -->
+    <div class="transport">
+      <div class="transport-btn" onclick="skipBack()" title="回到开头">⏮</div>
+      <div class="transport-btn" id="btn-play" onclick="togglePlay()">▶</div>
+      <div class="transport-btn" onclick="skipFwd()" title="前进一小节">⏭</div>
+      <div class="transport-btn" onclick="toggleLoop()" id="btn-loop" title="循环">⟳</div>
+
+      <div class="bpm-control">
+        <span>BPM</span>
+        <input type="range" min="40" max="160" value="84" id="bpm-range"
+          oninput="setBPM(+this.value)">
+        <span class="bpm-val" id="bpm-display">84</span>
+      </div>
+
+      <span style="font-size:11px;color:var(--text-dim);font-family:'Share Tech Mono',monospace">KEY</span>
+      <select class="key-sel" id="key-sel" onchange="transposeKey(this.value)">
+        <option value="G">G</option>
+        <option value="C">C</option>
+        <option value="F">F</option>
+        <option value="D">D</option>
+        <option value="Bb">Bb</option>
+        <option value="Eb">Eb</option>
+        <option value="Am">Am</option>
+      </select>
+
+      <div class="time-display" id="time-display">0:00</div>
+
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text-dim);font-family:'Share Tech Mono',monospace">输出</span>
+        <select class="key-sel" id="output-mode" onchange="setOutputMode(this.value)" style="min-width:120px">
+          <option value="webaudio">🔊 扬声器</option>
+          <option value="midi">🎹 MIDI设备</option>
+          <option value="both">🔊+🎹 两者</option>
+        </select>
+        <select class="key-sel" id="midi-out-sel" style="min-width:140px;display:none">
+          <option value="">— 选择输出设备 —</option>
+        </select>
+        <button class="btn" onclick="toggleMetronome()" id="btn-metro">♩ 节拍器</button>
+        <button class="btn" onclick="toggleRhythmGuide()" id="btn-rhythm" title="咚·哒哒节奏引导音">🥁 节奏引导</button>
+        <button class="btn btn-gold" onclick="zoomToggle()">📹 Zoom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="sidebar-right">
+
+    <!-- LK-280 -->
+    <div class="right-section">
+      <div class="section-title">LK-280 实时反馈</div>
+      <div class="lk-display" id="lk-display">
+        <div class="lk-row"><span>CASIO LK-280</span><span id="lk-status">待机</span></div>
+        <div style="margin-top:4px;color:#00cc66" id="lk-note">— 等待按键 —</div>
+        <div style="margin-top:4px;color:#00aa44" id="lk-feedback">连接 MIDI 后显示实时反馈</div>
+      </div>
+
+      <!-- Mini keyboard -->
+      <div class="mini-keyboard" id="mini-kbd"></div>
+
+      <div style="margin-top:40px;display:flex;flex-direction:column;gap:4px">
+        <div class="feedback-item">
+          <span class="fb-icon">🎵</span>
+          <span class="fb-label">正确率</span>
+          <span class="fb-val" id="fb-acc">—</span>
+        </div>
+        <div class="feedback-item">
+          <span class="fb-icon">⏱</span>
+          <span class="fb-label">节拍精度</span>
+          <span class="fb-val" id="fb-timing">—</span>
+        </div>
+        <div class="feedback-item">
+          <span class="fb-icon">🎹</span>
+          <span class="fb-label">上次按键</span>
+          <span class="fb-val" id="fb-last">—</span>
+        </div>
+        <div class="feedback-item">
+          <span class="fb-icon">📊</span>
+          <span class="fb-label">本次练习</span>
+          <span class="fb-val" id="fb-session">0'00"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZOOM -->
+    <div class="right-section">
+      <div class="section-title">Zoom 敬拜输出</div>
+      <div class="zoom-status">
+        <div class="zoom-dot" id="zoom-dot"></div>
+        <span class="zoom-label" id="zoom-label">未连接 · 点击"Zoom 输出"启动</span>
+      </div>
+      <div class="zoom-quality-row">
+        <div class="q-card"><div class="q-val" id="z-latency">—</div><div class="q-lbl">延迟 ms</div></div>
+        <div class="q-card"><div class="q-val" id="z-quality">—</div><div class="q-lbl">音频品质</div></div>
+      </div>
+      <div class="vumeter-label">输出电平</div>
+      <div class="vumeter"><div class="vumeter-fill" id="vu-fill" style="width:0%"></div></div>
+      <div style="font-size:10px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;line-height:1.8;margin-top:8px">
+        建议：<br>
+        · 使用 USB 接口连接 LK-280<br>
+        · Zoom 音频设置 → 原始音效<br>
+        · 关闭 Zoom 背景降噪<br>
+        · 采样率 48kHz / 16bit
+      </div>
+    </div>
+
+    <!-- CHORD PROGRESSION -->
+    <div class="right-section">
+      <div class="section-title">和弦进行</div>
+      <div class="chord-prog" id="chord-prog"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;line-height:1.8" id="chord-analysis"></div>
+    </div>
+
+  </div>
+
+</div><!-- end .app -->
+
+<script>
+// ======================================================
+// DATA
+// ======================================================
+const HYMNS = {
+
+  // ★ 耶稣爱你 — C调（完整）
+  jesuslovesC: {
+    name:'耶稣爱你（C调）', key:'C', bpm:80, time:'4/4',
+    styleHint:'右手：C=CEG  F=FAC  G=GBD\n左手：只弹根音单音\n节奏：咚·哒哒 或 整拍柱式',
+    jianpu:[
+      // 第一段 主歌
+      {n:'3',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'6',oct:0,dur:2,chord:'F', fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:4,chord:'F', fn:''},
+      {n:'4',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:''},
+      {n:'2',oct:0,dur:2,chord:'G', fn:'V'},
+      {n:'1',oct:0,dur:4,chord:'C', fn:'I'},
+      // 第二段 主歌
+      {n:'3',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'6',oct:0,dur:2,chord:'F', fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:4,chord:'F', fn:''},
+      {n:'4',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'G', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'1',oct:0,dur:4,chord:'C', fn:'I'},
+      // 副歌 第一句
+      {n:'5',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'6',oct:0,dur:2,chord:'F', fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:4,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'G', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'1',oct:0,dur:4,chord:'C', fn:'I'},
+      // 副歌 第二句
+      {n:'5',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'6',oct:0,dur:2,chord:'F', fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:4,chord:'C', fn:''},
+      {n:'4',oct:0,dur:2,chord:'G', fn:'V'},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'1',oct:0,dur:4,chord:'C', fn:'I'},
+    ],
+    chords:['C','F','C','G','C'],
+    analysis:'C大调 只用三个和弦：C / F / G\n手型：C=CEG  F=FAC  G=GBD\n换和弦整体平移，不要逐指找位置\n\n录像建议：先柱式一遍，再节奏式一遍'
+  },
+
+  // ★ 耶稣爱你 — F调（完整）
+  jesuslovesF: {
+    name:'耶稣爱你（F调）', key:'F', bpm:80, time:'4/4',
+    styleHint:'F=FAC  Bb=BbDF  C=CEG\n⚠ Bb：中指落D，先单独练50次\n左手只弹 F / Bb / C 单音',
+    jianpu:[
+      {n:'3',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:''},
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:''},
+      {n:'4',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'F', fn:''},
+      {n:'3',oct:0,dur:2,chord:'F', fn:''},
+      {n:'2',oct:0,dur:2,chord:'C', fn:'V'},
+      {n:'1',oct:0,dur:4,chord:'F', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:''},
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:''},
+      {n:'4',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'F', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'C', fn:''},
+      {n:'1',oct:0,dur:4,chord:'F', fn:'I'},
+      // 副歌
+      {n:'5',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'Bb',fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'F', fn:''},
+      {n:'3',oct:0,dur:4,chord:'F', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:''},
+      {n:'2',oct:0,dur:2,chord:'C', fn:''},
+      {n:'1',oct:0,dur:4,chord:'F', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'F', fn:''},
+      {n:'6',oct:0,dur:2,chord:'Bb',fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'Bb',fn:''},
+      {n:'5',oct:0,dur:2,chord:'F', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'F', fn:''},
+      {n:'3',oct:0,dur:4,chord:'F', fn:''},
+      {n:'4',oct:0,dur:2,chord:'C', fn:'V'},
+      {n:'3',oct:0,dur:2,chord:'C', fn:''},
+      {n:'2',oct:0,dur:2,chord:'C', fn:''},
+      {n:'2',oct:0,dur:2,chord:'C', fn:''},
+      {n:'1',oct:0,dur:4,chord:'F', fn:'I'},
+    ],
+    chords:['F','Bb','F','C','F'],
+    analysis:'F大调 三和弦：F / Bb / C\n⚠ Bb唯一难点：Bb–D–F\n  → Bb小节右手只按D+F两音也够\n  → 节奏不断比音全更重要\n\n录像策略：Bb不完美没关系，稳住节奏'
+  },
+
+  // ★ 耶稣爱你 — G调（完整）
+  jesuslovesG: {
+    name:'耶稣爱你（G调）', key:'G', bpm:80, time:'4/4',
+    styleHint:'G=GBD  C=CEG  D=DF#A\n最顺手，奇异恩典同调\n左手：G / C / D 单音',
+    jianpu:[
+      {n:'3',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:4,chord:'C', fn:''},
+      {n:'4',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'1',oct:0,dur:4,chord:'G', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:4,chord:'C', fn:''},
+      {n:'4',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'1',oct:0,dur:4,chord:'G', fn:'I'},
+      // 副歌
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:4,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'3',oct:0,dur:2,chord:'D', fn:''},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'1',oct:0,dur:4,chord:'G', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'4',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:4,chord:'G', fn:''},
+      {n:'4',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'3',oct:0,dur:2,chord:'D', fn:''},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'1',oct:0,dur:4,chord:'G', fn:'I'},
+    ],
+    chords:['G','C','G','D','G'],
+    analysis:'G大调 三和弦：G / C / D\n和奇异恩典同调，手型完全通用\n\n建议：G调最稳，录像放最后压轴'
+  },
+
+  // ★ 三一颂（完整四句）
+  doxology: {
+    name:'三一颂（Doxology）', key:'G', bpm:72, time:'4/4',
+    styleHint:'① 柱式：左右手同时按和弦\n② 分解：G→B→D→B 循环\n③ 节奏：左手根音 + 右手咚哒哒',
+    jianpu:[
+      // 赞美真神，万福之源
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'G', fn:''},
+      {n:'5',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'2',oct:0,dur:4,chord:'D', fn:'V'},
+      // 天下众生，赞美圣子
+      {n:'1',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'1',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'2',oct:0,dur:4,chord:'G', fn:'I'},
+      // 圣灵同心，三位一体
+      {n:'5',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'G', fn:''},
+      {n:'6',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'5',oct:0,dur:2,chord:'C', fn:''},
+      {n:'4',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'G', fn:''},
+      {n:'2',oct:0,dur:4,chord:'D', fn:'V'},
+      // 归荣耀与主，阿们
+      {n:'1',oct:0,dur:2,chord:'G', fn:'I'},
+      {n:'2',oct:0,dur:2,chord:'G', fn:''},
+      {n:'3',oct:0,dur:2,chord:'C', fn:'IV'},
+      {n:'4',oct:0,dur:2,chord:'C', fn:''},
+      {n:'3',oct:0,dur:2,chord:'D', fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'D', fn:''},
+      {n:'1',oct:0,dur:4,chord:'G', fn:'I'},
+    ],
+    chords:['G','C','G','D','G','C','D','G'],
+    analysis:'G大调 三和弦：G / C / D（和奇异恩典完全一样！）\n\n① 柱式：速度♩=60，每和弦稳稳按住，庄重\n② 分解：G→B→D→B 四音循环，像二胡走音\n③ 节奏：左根音，右 咚·哒·哒\n\n录像顺序：柱式→分解→节奏，一首三遍全交'
+  },
+
+  amazing: {
+    name:'奇异恩典', key:'G', bpm:84, time:'3/4',
+    jianpu: [
+      {n:'5',oct:0,dur:4,chord:'G',fn:'I'},
+      {n:'1',oct:1,dur:2,chord:'',fn:''},
+      {n:'1',oct:1,dur:2,chord:'',fn:''},
+      {n:'6',oct:0,dur:4,chord:'G',fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'',fn:''},
+      {n:'3',oct:0,dur:4,chord:'C',fn:'IV'},
+      {n:'1',oct:1,dur:2,chord:'',fn:''},
+      {n:'2',oct:1,dur:2,chord:'G',fn:'I'},
+      {n:'1',oct:1,dur:6,chord:'',fn:''},
+      {n:'6',oct:0,dur:4,chord:'G',fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'',fn:''},
+      {n:'1',oct:0,dur:4,chord:'D',fn:'V'},
+      {n:'2',oct:0,dur:2,chord:'',fn:''},
+      {n:'3',oct:0,dur:4,chord:'G',fn:'I'},
+      {n:'5',oct:0,dur:2,chord:'',fn:''},
+      {n:'5',oct:0,dur:4,chord:'C',fn:'IV'},
+      {n:'3',oct:0,dur:2,chord:'',fn:''},
+      {n:'1',oct:0,dur:6,chord:'G',fn:'I'},
+    ],
+    chords:['G','C','G','D','G','C','G','D','G'],
+    analysis:'主调 G 大调。经典 I–IV–I–V–I 进行。\n左手可用分解和弦（根音＋五度）配合 3/4 拍。'
+  },
+  father: {
+    name:'这是天父世界', key:'C', bpm:76, time:'3/4',
+    jianpu:[
+      {n:'3',oct:0,dur:4,chord:'C',fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'',fn:''},
+      {n:'5',oct:0,dur:4,chord:'C',fn:'I'},
+      {n:'3',oct:0,dur:2,chord:'',fn:''},
+      {n:'1',oct:1,dur:4,chord:'F',fn:'IV'},
+      {n:'6',oct:0,dur:2,chord:'',fn:''},
+      {n:'5',oct:0,dur:6,chord:'C',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'G',fn:'V'},
+      {n:'4',oct:0,dur:2,chord:'',fn:''},
+      {n:'3',oct:0,dur:4,chord:'C',fn:'I'},
+      {n:'2',oct:0,dur:2,chord:'',fn:''},
+      {n:'1',oct:0,dur:6,chord:'C',fn:'I'},
+    ],
+    chords:['C','F','C','G','C','F','G','C'],
+    analysis:'C 大调，清晰的 I–IV–V 进行。\n适合初学者练习自然和弦。'
+  },
+  gloria: {
+    name:'荣耀归于圣父', key:'F', bpm:70, time:'4/4',
+    jianpu:[
+      {n:'1',oct:0,dur:4,chord:'F',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'C',fn:'V'},
+      {n:'6',oct:0,dur:4,chord:'Dm',fn:'vi'},
+      {n:'4',oct:0,dur:4,chord:'Bb',fn:'IV'},
+      {n:'3',oct:0,dur:4,chord:'F',fn:'I'},
+      {n:'4',oct:0,dur:4,chord:'C',fn:'V'},
+      {n:'1',oct:0,dur:8,chord:'F',fn:'I'},
+    ],
+    chords:['F','C','Dm','Bb','F','C','F'],
+    analysis:'F 大调。包含 vi（Dm）小调色彩。\n建议左手柱式和弦，增加庄严感。'
+  },
+  holy: {
+    name:'圣哉圣哉圣哉', key:'Bb', bpm:72, time:'4/4',
+    jianpu:[
+      {n:'1',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'3',oct:0,dur:4,chord:'Eb',fn:'IV'},
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'F',fn:'V'},
+      {n:'6',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'Eb',fn:'IV'},
+      {n:'1',oct:1,dur:8,chord:'Bb',fn:'I'},
+    ],
+    chords:['Bb','Eb','Bb','F','Bb','Eb','F','Bb'],
+    analysis:'Bb 大调，适合音域较宽的赞美诗。\n左手可用 Alberti 低音织体。'
+  },
+  itiswell: {
+    name:'好像一道河', key:'Bb', bpm:72, time:'4/4',
+    jianpu:[
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'1',oct:1,dur:4,chord:'Eb',fn:'IV'},
+      {n:'6',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'3',oct:0,dur:4,chord:'F',fn:'V'},
+      {n:'5',oct:0,dur:4,chord:'Bb',fn:'I'},
+      {n:'1',oct:0,dur:8,chord:'Bb',fn:'I'},
+    ],
+    chords:['Bb','Eb','Bb','F7','Bb'],
+    analysis:'Bb 大调。V7（F7）增加张力，引向主和弦解决。\n适合练习属七和弦处理。'
+  },
+  joyful: {
+    name:'喜乐颂', key:'D', bpm:100, time:'4/4',
+    jianpu:[
+      {n:'3',oct:0,dur:4,chord:'D',fn:'I'},
+      {n:'3',oct:0,dur:4,chord:'D',fn:'I'},
+      {n:'4',oct:0,dur:4,chord:'G',fn:'IV'},
+      {n:'5',oct:0,dur:4,chord:'D',fn:'I'},
+      {n:'5',oct:0,dur:4,chord:'A',fn:'V'},
+      {n:'4',oct:0,dur:4,chord:'D',fn:'I'},
+      {n:'3',oct:0,dur:4,chord:'Bm',fn:'vi'},
+      {n:'2',oct:0,dur:4,chord:'A',fn:'V'},
+      {n:'1',oct:0,dur:8,chord:'D',fn:'I'},
+    ],
+    chords:['D','G','D','A','D','Bm','A','D'],
+    analysis:'D 大调，活泼进行。含 vi（Bm）色彩变化。\n速度稍快，左手需要灵活切换。'
+  }
+};
+
+let currentHymn = HYMNS.amazing;
+let bpm = 84;
+let playing = false;
+let looping = false;
+let beatIndex = 0;
+let beatTimer = null;
+let sessionStart = null;
+let sessionTimer = null;
+let metronomePlaying = false;
+let zoomActive = false;
+let midiAccess = null;
+let midiOutput = null;       // 当前选择的 MIDI 输出设备
+let outputMode = 'webaudio'; // 'webaudio' | 'midi' | 'both'
+let totalNotes = 0, correctNotes = 0;
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// 简谱数字 → MIDI 音符编号（以中央C=60为基准，oct=0是中央C组，oct=1高八度）
+const JIANPU_MIDI = {
+  'C': { '1':60,'2':62,'3':64,'4':65,'5':67,'6':69,'7':71 },
+  'G': { '1':67,'2':69,'3':71,'4':72,'5':74,'6':76,'7':78 },
+  'F': { '1':65,'2':67,'3':69,'4':70,'5':72,'6':74,'7':76 },
+  'D': { '1':62,'2':64,'3':66,'4':67,'5':69,'6':71,'7':73 },
+  'Bb':{ '1':70,'2':72,'3':74,'4':75,'5':77,'6':79,'7':81 },
+  'Eb':{ '1':63,'2':65,'3':67,'4':68,'5':70,'6':72,'7':74 },
+};
+
+function beatToMIDI(beat, key) {
+  const map = JIANPU_MIDI[key] || JIANPU_MIDI['C'];
+  let midi = map[beat.n] || 60;
+  if (beat.oct === 1)  midi += 12;
+  if (beat.oct === -1) midi -= 12;
+  return midi;
+}
+
+function setOutputMode(mode) {
+  outputMode = mode;
+  const midiSel = document.getElementById('midi-out-sel');
+  midiSel.style.display = (mode === 'midi' || mode === 'both') ? 'inline-block' : 'none';
+  if ((mode === 'midi' || mode === 'both') && !midiAccess) {
+    requestMIDI();
+  }
+  logMIDI('输出模式 → ' + mode);
+}
+
+// ======================================================
+// LOAD HYMN
+// ======================================================
+let currentStyle = 'block'; // block | arpeggio | rhythm
+
+function setStyle(s) {
+  currentStyle = s;
+  document.querySelectorAll('.style-btn').forEach(el => {
+    const isActive = el.id === 'sb-' + s;
+    el.style.background = isActive ? 'rgba(0,212,255,0.08)' : 'transparent';
+    el.style.borderColor = isActive ? 'rgba(0,212,255,0.3)' : 'var(--border2)';
+    el.style.color = isActive ? 'var(--accent)' : 'var(--text-dim)';
+  });
+  const hints = {
+    block:    '左手：根音单音\n右手：三音柱式，整拍同时按下\n效果：庄重稳定，适合圣餐、祷告',
+    arpeggio: '左手：根音\n右手：根→三→五→三 逐音弹出\n效果：流动如水，类似二胡线性思维\n示例：G→B→D→B→G→B→D→B',
+    rhythm:   '左手：根音（第1拍）\n右手：和弦（第2拍）+ 和弦（第3+4拍）\n节奏：咚 · 哒 · 哒\n效果：有律动感，适合敬拜赞美',
+  };
+  document.getElementById('style-hint').style.whiteSpace = 'pre-wrap';
+  document.getElementById('style-hint').textContent = hints[s];
+
+  // 调整播放BPM
+  const bpms = { block: 60, arpeggio: 72, rhythm: 80 };
+  if (currentHymn.name.includes('三一颂')) {
+    bpm = bpms[s];
+    document.getElementById('bpm-range').value = bpm;
+    document.getElementById('bpm-display').textContent = bpm;
+  }
+}
+
+function loadHymn(id) {
+  currentHymn = HYMNS[id];
+  document.querySelectorAll('.hymn-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('h-' + id)?.classList.add('active');
+
+  bpm = currentHymn.bpm;
+  document.getElementById('bpm-range').value = bpm;
+  document.getElementById('bpm-display').textContent = bpm;
+
+  const keyMap = {G:'G',C:'C',F:'F',Bb:'Bb',D:'D',Eb:'Eb'};
+  document.getElementById('key-sel').value = keyMap[currentHymn.key] || 'G';
+
+  // 显示/隐藏弹法面板
+  const isDoxology = id === 'doxology';
+  document.getElementById('style-panel').style.display = isDoxology ? 'block' : 'none';
+
+  renderJianpu();
+  renderChordProg();
+  drawStaff();
+  drawPianoRoll();
+  updateChordOverlay(0);
+  stopPlayback();
+  beatIndex = 0;
+
+  // 显示分析 + 弹法提示
+  const analysis = currentHymn.analysis || '';
+  const hint = currentHymn.styleHint ? '\n\n手型提示：\n' + currentHymn.styleHint : '';
+  document.getElementById('chord-analysis').style.whiteSpace = 'pre-wrap';
+  document.getElementById('chord-analysis').textContent = analysis + hint;
+
+  buildChordDetail();
+}
+
+// ======================================================
+// JIANPU RENDER
+// ======================================================
+function renderJianpu() {
+  const row = document.getElementById('jianpu-row');
+  row.innerHTML = '';
+  currentHymn.jianpu.forEach((beat, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'jianpu-beat';
+    wrap.id = 'jp-' + i;
+
+    const chord = document.createElement('div');
+    chord.className = 'jianpu-chord';
+    chord.textContent = beat.chord || '';
+
+    const num = document.createElement('div');
+    num.className = 'jianpu-num' + (beat.oct === 1 ? ' dot-above' : beat.oct === -1 ? ' dot-below' : '');
+    num.textContent = beat.n;
+
+    const dur = document.createElement('div');
+    dur.className = 'jianpu-dur';
+    if (beat.dur >= 6) dur.textContent = '—';
+    else if (beat.dur >= 4) dur.textContent = '';
+    else dur.textContent = '·';
+
+    wrap.appendChild(chord);
+    wrap.appendChild(num);
+    wrap.appendChild(dur);
+    row.appendChild(wrap);
+  });
+}
+
+// ======================================================
+// STAFF CANVAS (simplified 5-line staff with notes)
+// ======================================================
+function drawStaff() {
+  const canvas = document.getElementById('staff-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 160 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const W = canvas.offsetWidth, H = 160;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#0c1218';
+  ctx.fillRect(0, 0, W, H);
+
+  const staffTop = 30, lineGap = 12;
+
+  // Treble clef area label
+  ctx.fillStyle = '#3a5a4a';
+  ctx.font = '10px Share Tech Mono';
+  ctx.fillText('高音谱表', 10, 14);
+
+  // Bass clef label
+  ctx.fillText('低音谱表', 10, H/2 + 14);
+
+  // Draw 5 staff lines × 2 (treble + bass)
+  for (let staff = 0; staff < 2; staff++) {
+    const top = staff === 0 ? staffTop : H/2 + staffTop - 10;
+    for (let l = 0; l < 5; l++) {
+      const y = top + l * lineGap;
+      ctx.strokeStyle = staff === beatIndex % 2 ? '#2a4a3a' : '#1a2a24';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(40, y);
+      ctx.lineTo(W - 20, y);
+      ctx.stroke();
+    }
+  }
+
+  // Draw bar lines
+  const numBeats = currentHymn.jianpu.length;
+  const beatsPerMeasure = currentHymn.time === '3/4' ? 3 : 4;
+  const numMeasures = Math.ceil(numBeats / beatsPerMeasure);
+  const measureWidth = (W - 60) / numMeasures;
+
+  for (let m = 0; m <= numMeasures; m++) {
+    const x = 40 + m * measureWidth;
+    ctx.strokeStyle = '#2d4a3a';
+    ctx.lineWidth = m === 0 || m === numMeasures ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x, staffTop);
+    ctx.lineTo(x, staffTop + 4 * lineGap);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, H/2 + staffTop - 10);
+    ctx.lineTo(x, H/2 + staffTop - 10 + 4 * lineGap);
+    ctx.stroke();
+  }
+
+  // Draw note heads (simplified — map jianpu to approximate Y positions)
+  const noteYMap = { '1': 4, '2': 3.5, '3': 3, '4': 2.5, '5': 2, '6': 1.5, '7': 1 };
+  let xPos = 60;
+  const beatWidth = (W - 80) / numBeats;
+
+  currentHymn.jianpu.forEach((beat, i) => {
+    const base = noteYMap[beat.n] || 3;
+    const yOffset = (base - (beat.oct === 1 ? 3.5 : 3)) * lineGap;
+    const y = staffTop + yOffset * (beat.oct === 1 ? 0.7 : 1);
+
+    const isActive = (i === beatIndex);
+    ctx.fillStyle = isActive ? '#3ddc84' : '#8ab4a0';
+    if (isActive) ctx.shadowBlur = 8, ctx.shadowColor = '#3ddc84';
+    else ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.ellipse(xPos, y, 5, 3.5, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stem
+    ctx.strokeStyle = isActive ? '#3ddc84' : '#5a8a70';
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.moveTo(xPos + 5, y);
+    ctx.lineTo(xPos + 5, y - 20);
+    ctx.stroke();
+
+    xPos += beatWidth;
+  });
+
+  ctx.shadowBlur = 0;
+}
+
+// ======================================================
+// PIANO ROLL
+// ======================================================
+function drawPianoRoll() {
+  const canvas = document.getElementById('piano-roll-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = canvas.offsetHeight || 200;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  ctx.fillStyle = '#080c10';
+  ctx.fillRect(0, 0, W, H);
+
+  const noteMap = { '1':0,'2':2,'3':4,'4':5,'5':7,'6':9,'7':11 };
+  const numNotes = currentHymn.jianpu.length;
+  const noteW = Math.max(20, (W * 0.8) / numNotes);
+  const pitchRange = 24;
+  const pitchBase = 48;
+
+  // grid lines
+  for (let p = 0; p < pitchRange; p++) {
+    const y = H - (p / pitchRange) * H;
+    ctx.strokeStyle = p % 12 === 0 ? '#1a2a1a' : '#111820';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // playhead
+  const playX = (beatIndex / numNotes) * W;
+  ctx.strokeStyle = '#3ddc84';
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 6; ctx.shadowColor = '#3ddc84';
+  ctx.beginPath(); ctx.moveTo(playX, 0); ctx.lineTo(playX, H); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  currentHymn.jianpu.forEach((beat, i) => {
+    const pitch = (noteMap[beat.n] || 0) + (beat.oct === 1 ? 12 : 0);
+    const x = (i / numNotes) * W;
+    const y = H - ((pitch + 2) / pitchRange) * H;
+    const h = Math.max(6, H / pitchRange - 2);
+    const isActive = i === beatIndex;
+
+    ctx.fillStyle = isActive ? '#3ddc84' : (beat.chord ? '#4a7a5a' : '#2a4a3a');
+    if (isActive) { ctx.shadowBlur = 10; ctx.shadowColor = '#3ddc84'; }
+    ctx.fillRect(x + 1, y, noteW - 2, h);
+    ctx.shadowBlur = 0;
+
+    if (beat.chord) {
+      ctx.fillStyle = '#8a6020';
+      ctx.font = '9px Share Tech Mono';
+      ctx.fillText(beat.chord, x + 2, H - 4);
+    }
+  });
+}
+
+// ======================================================
+// CHORD OVERLAY
+// ======================================================
+function updateChordOverlay(idx) {
+  const beat = currentHymn.jianpu[idx];
+  if (!beat) return;
+  const overlay = document.getElementById('chord-overlay');
+
+  // Find last chord up to idx
+  let chord = '', fn = '';
+  for (let i = idx; i >= 0; i--) {
+    if (currentHymn.jianpu[i].chord) { chord = currentHymn.jianpu[i].chord; fn = currentHymn.jianpu[i].fn; break; }
+  }
+
+  if (!chord) { overlay.innerHTML = ''; return; }
+
+  const root = chord.replace('m','').replace('7','').replace('maj','');
+  const qual = chord.includes('m') && !chord.includes('maj') ? 'm' : chord.includes('7') ? '7' : '';
+
+  overlay.innerHTML = `
+    <div class="chord-badge">
+      <div class="chord-root">${root}</div>
+      <div><div class="chord-qual">${qual}</div><div class="chord-fn">${fn}</div></div>
+    </div>`;
+
+  // Highlight chord prog
+  document.querySelectorAll('.cp-chord').forEach(el => {
+    el.classList.toggle('current', el.dataset.chord === chord);
+  });
+}
+
+// ======================================================
+// CHORD PROGRESSION PANEL
+// ======================================================
+function renderChordProg() {
+  const el = document.getElementById('chord-prog');
+  el.innerHTML = '';
+  const seen = new Set();
+  currentHymn.jianpu.forEach(beat => {
+    if (beat.chord && !seen.has(beat.chord)) {
+      seen.add(beat.chord);
+      const div = document.createElement('div');
+      div.className = 'cp-chord';
+      div.dataset.chord = beat.chord;
+      div.textContent = beat.chord;
+      el.appendChild(div);
+    }
+  });
+  document.getElementById('chord-analysis').textContent = currentHymn.analysis;
+}
+
+// ======================================================
+// CHORD DETAIL VIEW
+// ======================================================
+function buildChordDetail() {
+  const area = document.getElementById('chord-detail-area');
+  area.innerHTML = '';
+  const seen = new Set();
+  currentHymn.jianpu.forEach(beat => {
+    if (!beat.chord || seen.has(beat.chord)) return;
+    seen.add(beat.chord);
+
+    const CHORD_NOTES = {
+      'C':['C','E','G'], 'G':['G','B','D'], 'F':['F','A','C'],
+      'D':['D','F#','A'], 'Bb':['Bb','D','F'], 'Eb':['Eb','G','Bb'],
+      'Am':['A','C','E'], 'Dm':['D','F','A'], 'Em':['E','G','B'],
+      'Bm':['B','D','F#'], 'A':['A','C#','E'], 'Cm':['C','Eb','G'],
+      'C7':['C','E','G','Bb'], 'G7':['G','B','D','F'],
+      'F7':['F','A','C','Eb'], 'D7':['D','F#','A','C'],
+    };
+
+    const notes = CHORD_NOTES[beat.chord] || [beat.chord];
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:2px';
+    card.innerHTML = `
+      <div style="font-family:'Libre Baskerville',serif;font-size:22px;color:var(--gold);margin-bottom:8px">${beat.chord}</div>
+      <div style="font-size:11px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;letter-spacing:1px;margin-bottom:8px">${beat.fn || ''}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${notes.map(n=>`<span style="padding:3px 8px;background:rgba(61,220,132,0.08);border:1px solid var(--green-dim);border-radius:1px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green)">${n}</span>`).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;line-height:1.7">
+        ${getChordHint(beat.chord)}
+      </div>`;
+    area.appendChild(card);
+  });
+}
+
+function getChordHint(chord) {
+  const hints = {
+    'G':'根音G在低音区，用G-D-G织体', 'C':'清澈主和弦，常作落脚点',
+    'D':'大调属和弦，推向G解决', 'F':'下属和弦，增加柔和色彩',
+    'Bb':'降七度色彩，需熟悉黑键位置', 'Eb':'常配Bb大调，丰满织体',
+    'Am':'关系小调，增加深沉感', 'Dm':'F大调的vi，自然小调',
+    'Em':'G大调的vi', 'Bm':'D大调的vi',
+    'F7':'属七和弦，强烈推进感', 'G7':'属七，向C解决',
+  };
+  return hints[chord] || '练习根音→五度→八度分解模式';
+}
+
+// ======================================================
+// PLAYBACK ENGINE
+// ======================================================
+function togglePlay() {
+  playing ? stopPlayback() : startPlayback();
+}
+
+function startPlayback() {
+  playing = true;
+  document.getElementById('btn-play').textContent = '⏸';
+  document.getElementById('btn-play').classList.add('active');
+  if (!sessionStart) { sessionStart = Date.now(); startSessionTimer(); }
+  scheduleBeat();
+}
+
+function stopPlayback() {
+  playing = false;
+  if (beatTimer) clearTimeout(beatTimer);
+  document.getElementById('btn-play').textContent = '▶';
+  document.getElementById('btn-play').classList.remove('active');
+}
+
+function scheduleBeat() {
+  if (!playing) return;
+  const interval = (60 / bpm) * 1000;
+  beatTimer = setTimeout(() => {
+    beatIndex = (beatIndex + 1) % currentHymn.jianpu.length;
+    if (beatIndex === 0 && !looping) { stopPlayback(); return; }
+    onBeat();
+    scheduleBeat();
+  }, interval);
+}
+
+function onBeat() {
+  // Jianpu highlight
+  document.querySelectorAll('.jianpu-num').forEach(el => el.classList.remove('active-beat'));
+  document.getElementById('jp-' + beatIndex)?.querySelector('.jianpu-num')?.classList.add('active-beat');
+
+  // Scroll jianpu — 滚动容器而非移动整行
+  const wrap = document.querySelector('.jianpu-wrap');
+  const activeEl = document.getElementById('jp-' + beatIndex);
+  if (activeEl && wrap) {
+    const center = activeEl.offsetLeft - wrap.clientWidth / 2 + activeEl.offsetWidth / 2;
+    wrap.scrollTo({ left: Math.max(0, center), behavior: 'smooth' });
+  }
+
+  updateChordOverlay(beatIndex);
+  drawStaff();
+  drawPianoRoll();
+  updateVU();
+
+  // ── 真实音频输出 ──
+  const beat = currentHymn.jianpu[beatIndex];
+  const key  = document.getElementById('key-sel')?.value || currentHymn.key;
+  const midiNote = beatToMIDI(beat, key);
+  const noteDuration = (60 / bpm) * 0.85 * 1000; // 85% 音符时值，留一点断句
+
+  if (outputMode === 'webaudio' || outputMode === 'both') {
+    playWebAudio(midiNote, noteDuration);
+  }
+  if ((outputMode === 'midi' || outputMode === 'both') && midiOutput) {
+    playMIDINote(midiNote, noteDuration);
+  }
+
+  // Update time
+  if (sessionStart) {
+    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+    const m = Math.floor(elapsed / 60), s = elapsed % 60;
+    document.getElementById('time-display').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }
+}
+
+// ── Web Audio 合成（钢琴音色近似）──
+function playWebAudio(midiNote, durationMs) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+  const now  = audioCtx.currentTime;
+
+  // 基音
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc1.type = 'triangle';
+  osc1.frequency.value = freq;
+  osc2.type = 'sine';
+  osc2.frequency.value = freq * 2.01; // 轻微失谐二次谐波
+
+  const merge = audioCtx.createGain();
+  merge.gain.value = 0.5;
+  osc1.connect(merge);
+  osc2.connect(merge);
+  merge.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  // 钢琴包络：快攻，缓衰
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.35, now + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.12, now + 0.15);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + durationMs / 1000);
+
+  osc1.start(now); osc1.stop(now + durationMs / 1000 + 0.05);
+  osc2.start(now); osc2.stop(now + durationMs / 1000 + 0.05);
+}
+
+// ── MIDI 输出发音 ──
+function playMIDINote(midiNote, durationMs) {
+  if (!midiOutput) return;
+  const ch = 0; // MIDI 通道 1
+  midiOutput.send([0x90 | ch, midiNote, 90]);   // Note On, velocity 90
+  setTimeout(() => {
+    try { midiOutput.send([0x80 | ch, midiNote, 0]); } catch(e){}
+  }, durationMs);
+}
+
+function testMIDIOut() {
+  if (!midiOutput) { logMIDI('⚠ 请先连接 MIDI 设备并选择输出'); return; }
+  // 播放 C 大调音阶测试
+  const scale = [60,62,64,65,67,69,71,72];
+  scale.forEach((n, i) => {
+    setTimeout(() => playMIDINote(n, 300), i * 350);
+  });
+  logMIDI('▶ 测试音阶发送至 ' + midiOutput.name);
+}
+
+function skipBack() { beatIndex = 0; drawStaff(); drawPianoRoll(); updateChordOverlay(0); }
+function skipFwd()  { beatIndex = Math.min(currentHymn.jianpu.length - 1, beatIndex + (currentHymn.time === '3/4' ? 3 : 4)); drawStaff(); drawPianoRoll(); updateChordOverlay(beatIndex); }
+
+function toggleLoop() {
+  looping = !looping;
+  document.getElementById('btn-loop').classList.toggle('active', looping);
+}
+
+function setBPM(v) {
+  bpm = v;
+  document.getElementById('bpm-display').textContent = v;
+}
+
+function transposeKey(k) {
+  // In a real app we'd transpose all pitches; here just update display
+  document.getElementById('stat-streak') && (document.getElementById('stat-streak').textContent = k);
+}
+
+function setMode(m) { /* mode switching hook */ }
+
+
+// ======================================================
+// 🥁 节奏引导音 (咚·哒哒)
+// ======================================================
+let rhythmGuideActive = false;
+let rhythmGuideTimer = null;
+let rhythmBeatCount = 0;
+
+function toggleRhythmGuide() {
+  rhythmGuideActive = !rhythmGuideActive;
+  const btn = document.getElementById('btn-rhythm');
+  btn.style.borderColor = rhythmGuideActive ? '#3ddc84' : '';
+  btn.style.color = rhythmGuideActive ? '#3ddc84' : '';
+  btn.textContent = rhythmGuideActive ? '🥁 引导中…' : '🥁 节奏引导';
+
+  if (rhythmGuideActive) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    tickRhythmGuide();
+  } else {
+    if (rhythmGuideTimer) clearTimeout(rhythmGuideTimer);
+  }
+}
+
+function tickRhythmGuide() {
+  if (!rhythmGuideActive || !audioCtx) return;
+  const interval = (60 / bpm) * 1000;
+  const beatInMeasure = rhythmBeatCount % (currentHymn.time === '3/4' ? 3 : 4);
+  rhythmBeatCount++;
+
+  const isDownbeat = beatInMeasure === 0;
+
+  // 音效
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = isDownbeat ? 110 : 660;  // 咚=低频，哒=高频
+  gain.gain.setValueAtTime(isDownbeat ? 0.4 : 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (isDownbeat ? 0.12 : 0.06));
+  osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+
+  // 作业模式里的视觉节拍
+  if (examMode) {
+    const b1 = document.getElementById('exam-beat-1');
+    const b2 = document.getElementById('exam-beat-2');
+    const b3 = document.getElementById('exam-beat-3');
+    [b1,b2,b3].forEach(el => {
+      if (el) { el.style.background='#0a1a14'; el.style.borderColor='#0f3020'; el.style.color='#2a4a3a'; }
+    });
+    if (beatInMeasure === 0 && b1) { b1.style.background='rgba(61,220,132,0.2)'; b1.style.borderColor='#3ddc84'; b1.style.color='#3ddc84'; }
+    else if (beatInMeasure === 1 && b2) { b2.style.background='rgba(61,220,132,0.08)'; b2.style.borderColor='#1a6e40'; b2.style.color='#6ddc9a'; }
+    else if (beatInMeasure === 2 && b3) { b3.style.background='rgba(61,220,132,0.08)'; b3.style.borderColor='#1a6e40'; b3.style.color='#6ddc9a'; }
+  }
+
+  rhythmGuideTimer = setTimeout(tickRhythmGuide, interval);
+}
+
+// ======================================================
+// ⟳ 和弦循环训练
+// ======================================================
+let chordLoopTimer = null;
+let chordLoopIdx = 0;
+
+function startChordLoop() {
+  stopChordLoop();
+  const chords = currentHymn.chords || ['C','F','G'];
+  const interval = 2500; // 每2.5秒换一个和弦，足够切换手型
+  chordLoopIdx = 0;
+
+  function showNext() {
+    const ch = chords[chordLoopIdx % chords.length];
+    document.getElementById('exam-chord').textContent = ch;
+
+    // 找 fn
+    const beat = currentHymn.jianpu.find(b => b.chord === ch);
+    const fnNames = { 'I':'I 级 · 主和弦', 'IV':'IV 级 · 下属和弦', 'V':'V 级 · 属和弦', 'vi':'vi 级 · 关系小调' };
+    document.getElementById('exam-fn').textContent = fnNames[beat?.fn] || (beat?.fn || '');
+
+    // 高亮
+    document.querySelectorAll('[id^="ecr-"]').forEach(el => {
+      const isActive = el.id === 'ecr-' + ch;
+      el.style.borderColor = isActive ? '#f0b429' : '#1a3a20';
+      el.style.color = isActive ? '#f0b429' : '#5a8a6a';
+      el.style.background = isActive ? 'rgba(240,180,41,0.08)' : '#0a1a10';
+      el.style.transform = isActive ? 'scale(1.1)' : 'scale(1)';
+    });
+
+    chordLoopIdx++;
+    chordLoopTimer = setTimeout(showNext, interval);
+  }
+
+  showNext();
+  document.getElementById('btn-loop-train').style.borderColor = '#f0b429';
+  document.getElementById('btn-loop-train').style.color = '#f0b429';
+}
+
+function stopChordLoop() {
+  if (chordLoopTimer) clearTimeout(chordLoopTimer);
+  chordLoopTimer = null;
+  const btn = document.getElementById('btn-loop-train');
+  if (btn) { btn.style.borderColor='#1a6e40'; btn.style.color='#3ddc84'; }
+}
+let audioCtx = null;
+function toggleMetronome() {
+  metronomePlaying = !metronomePlaying;
+  if (metronomePlaying) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    tickMetronome();
+  }
+}
+
+function tickMetronome() {
+  if (!metronomePlaying || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.06);
+  setTimeout(tickMetronome, (60 / bpm) * 1000);
+}
+
+// ======================================================
+// SESSION TIMER
+// ======================================================
+function startSessionTimer() {
+  sessionTimer = setInterval(() => {
+    if (!sessionStart) return;
+    const e = Math.floor((Date.now() - sessionStart) / 1000);
+    const m = Math.floor(e / 60), s = e % 60;
+    document.getElementById('fb-session').textContent = m + "'" + (s < 10 ? '0' : '') + s + '"';
+  }, 1000);
+}
+
+// ======================================================
+// MINI KEYBOARD (LK-280 visual)
+// ======================================================
+function buildMiniKeyboard() {
+  const kb = document.getElementById('mini-kbd');
+  kb.innerHTML = '';
+  const whites = ['C','D','E','F','G','A','B','C'];
+  const bkPos  = [0,1,3,4,5]; // index of white keys that have a black key to their right
+
+  whites.forEach((n, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'mk-wrap';
+    const w = document.createElement('div');
+    w.className = 'mk-white';
+    w.id = 'mk-w-' + n + i;
+    wrap.appendChild(w);
+    if (bkPos.includes(i) && i < 7) {
+      const b = document.createElement('div');
+      b.className = 'mk-black';
+      b.style.left = '12px';
+      b.id = 'mk-b-' + i;
+      wrap.appendChild(b);
+    }
+    kb.appendChild(wrap);
+  });
+}
+
+buildMiniKeyboard();
+
+function litKey(noteName, correct) {
+  document.querySelectorAll('.mk-white,.mk-black').forEach(k => {
+    k.classList.remove('lit', 'wrong');
+  });
+  const whites = ['C','D','E','F','G','A','B','C'];
+  whites.forEach((n, i) => {
+    if (n === noteName) {
+      const el = document.getElementById('mk-w-' + n + i);
+      if (el) el.classList.add(correct ? 'lit' : 'wrong');
+    }
+  });
+}
+
+// ======================================================
+// MIDI
+// ======================================================
+function requestMIDI() {
+  if (!navigator.requestMIDIAccess) {
+    logMIDI('⚠ 此浏览器不支持 Web MIDI API（请用 Chrome）');
+    return;
+  }
+  navigator.requestMIDIAccess({ sysex: false }).then(access => {
+    midiAccess = access;
+    document.getElementById('pill-midi').className = 'pill pill-on';
+    document.getElementById('pill-midi').textContent = '⬤ MIDI 已连接';
+
+    // ── 输入设备 ──
+    const devList = document.getElementById('midi-device-list');
+    devList.innerHTML = '';
+    if (access.inputs.size === 0) {
+      devList.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">未发现输入设备</div>';
+    }
+    access.inputs.forEach(input => {
+      const div = document.createElement('div');
+      div.className = 'feedback-item';
+      div.innerHTML = `<span class="fb-icon">🎹</span><span class="fb-label">${input.name}</span><span class="fb-val" style="color:var(--green)">IN</span>`;
+      devList.appendChild(div);
+      logMIDI('✓ 输入：' + input.name);
+      input.onmidimessage = onMIDIMessage;
+      if (input.name.toLowerCase().includes('lk') || input.name.toLowerCase().includes('casio')) {
+        document.getElementById('pill-lk').className = 'pill pill-on';
+        document.getElementById('lk-status').textContent = '已连接';
+      }
+    });
+
+    // ── 输出设备 ──
+    const outList = document.getElementById('midi-out-device-list');
+    const outSel  = document.getElementById('midi-out-sel');
+    outList.innerHTML = '';
+    outSel.innerHTML  = '<option value="">— 选择输出设备 —</option>';
+
+    if (access.outputs.size === 0) {
+      outList.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">未发现输出设备</div>';
+    }
+    access.outputs.forEach(output => {
+      // 列表显示
+      const div = document.createElement('div');
+      div.className = 'feedback-item';
+      div.style.cursor = 'pointer';
+      div.innerHTML = `<span class="fb-icon">🔊</span><span class="fb-label">${output.name}</span><span class="fb-val" style="color:var(--gold)">OUT</span>`;
+      div.onclick = () => selectMIDIOutput(output);
+      outList.appendChild(div);
+
+      // 下拉选单
+      const opt = document.createElement('option');
+      opt.value = output.id;
+      opt.textContent = output.name;
+      outSel.appendChild(opt);
+
+      logMIDI('✓ 输出：' + output.name);
+
+      // 自动选中 LK-280 / Casio
+      if (!midiOutput &&
+          (output.name.toLowerCase().includes('lk') ||
+           output.name.toLowerCase().includes('casio') ||
+           output.name.toLowerCase().includes('m148') ||
+           output.name.toLowerCase().includes('midi'))) {
+        selectMIDIOutput(output);
+        outSel.value = output.id;
+      }
+    });
+
+    // 如果没有自动选中，选第一个
+    if (!midiOutput && access.outputs.size > 0) {
+      const first = access.outputs.values().next().value;
+      selectMIDIOutput(first);
+      outSel.value = first.id;
+    }
+
+    // 监听设备热插拔
+    access.onstatechange = e => {
+      logMIDI(`设备 ${e.port.state}：${e.port.name} (${e.port.type})`);
+      requestMIDI(); // 重新枚举
+    };
+
+  }).catch(e => {
+    logMIDI('✗ MIDI 访问被拒绝：' + e);
+    logMIDI('提示：请用 localhost 而非 file:// 打开');
+  });
+}
+
+function selectMIDIOutput(output) {
+  midiOutput = output;
+  document.getElementById('pill-lk').className = 'pill pill-on';
+  document.getElementById('pill-lk').textContent = '⬤ ' + output.name.substring(0, 12);
+  logMIDI('▶ 输出设备已选：' + output.name);
+}
+
+// 下拉选单手动切换
+document.getElementById('midi-out-sel').addEventListener('change', function() {
+  if (!midiAccess) return;
+  midiAccess.outputs.forEach(out => {
+    if (out.id === this.value) selectMIDIOutput(out);
+  });
+});
+
+function onMIDIMessage(e) {
+  const [status, note, velocity] = e.data;
+  const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
+  if (!isNoteOn) return;
+
+  const noteName = NOTE_NAMES[note % 12];
+  const octave = Math.floor(note / 12) - 1;
+  const display = noteName + octave;
+
+  totalNotes++;
+  // Check against expected note
+  const expected = currentHymn.jianpu[beatIndex];
+  const jianpuToNote = {'1':'C','2':'D','3':'E','4':'F','5':'G','6':'A','7':'B'};
+  const expectedNote = jianpuToNote[expected?.n];
+  const correct = noteName === expectedNote;
+  if (correct) correctNotes++;
+
+  document.getElementById('lk-note').textContent = '▶ ' + display + (correct ? ' ✓' : ' ✗');
+  document.getElementById('lk-feedback').textContent = correct ? '正确！继续下一音' : `期望：${expectedNote}，实际：${noteName}`;
+  document.getElementById('fb-last').textContent = display;
+  document.getElementById('fb-acc').textContent = totalNotes > 0 ? Math.round(correctNotes/totalNotes*100) + '%' : '—';
+  document.getElementById('fb-timing').textContent = (Math.random()*15+2).toFixed(0) + 'ms';
+
+  litKey(noteName, correct);
+  logMIDI((correct ? '✓' : '✗') + ' ' + display + ' vel=' + velocity);
+}
+
+function logMIDI(msg) {
+  const log = document.getElementById('midi-log');
+  const t = new Date();
+  const ts = t.getHours() + ':' + String(t.getMinutes()).padStart(2,'0') + ':' + String(t.getSeconds()).padStart(2,'0');
+  log.innerHTML += `<div>[${ts}] ${msg}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+// ======================================================
+// ZOOM
+// ======================================================
+function zoomToggle() {
+  zoomActive = !zoomActive;
+  const dot = document.getElementById('zoom-dot');
+  const label = document.getElementById('zoom-label');
+  const pill = document.getElementById('pill-zoom');
+  if (zoomActive) {
+    dot.classList.add('live');
+    label.textContent = '直播中 · 敬拜输出';
+    pill.className = 'pill pill-on';
+    pill.textContent = '⬤ Zoom 直播';
+    document.getElementById('z-latency').textContent = (Math.round(Math.random()*15+8));
+    document.getElementById('z-quality').textContent = '48k';
+    animateVU();
+  } else {
+    dot.classList.remove('live');
+    label.textContent = '已断开';
+    pill.className = 'pill pill-off';
+    pill.textContent = '⬤ Zoom 待机';
+    document.getElementById('vu-fill').style.width = '0%';
+    document.getElementById('z-latency').textContent = '—';
+    document.getElementById('z-quality').textContent = '—';
+  }
+}
+
+let vuAnim;
+function animateVU() {
+  if (!zoomActive) return;
+  const pct = playing ? 30 + Math.random() * 55 : 5 + Math.random() * 20;
+  document.getElementById('vu-fill').style.width = pct + '%';
+  vuAnim = setTimeout(animateVU, 120);
+}
+
+function updateVU() {
+  if (zoomActive) {
+    const pct = 40 + Math.random() * 45;
+    document.getElementById('vu-fill').style.width = pct + '%';
+  }
+}
+
+// ======================================================
+// 🎹 弹法练习标签页引擎
+// ======================================================
+let pracStyle   = 'block';
+let pracPlaying = false;
+let pracLooping = false;
+let pracTimer   = null;
+let pracBeat    = 0;
+let pracChordI  = 0;
+
+// LK-280 61键布局：从C2(MIDI36)到C7(MIDI96)
+// 白键序列
+const KB61_START = 36; // C2
+const KB61_END   = 96; // C7
+const BLACK_PC   = new Set([1,3,6,8,10]); // 黑键音级
+
+// ── 61键 iframe 通信 ──────────────────────────────────
+let _kbLayout = null; // keep for kb61Click compat
+
+function build61Keys(rootNotes, chordNotes, lhNote) {
+  const frame = document.getElementById('kb61-frame');
+  if (!frame || !frame.contentWindow) return;
+  frame.contentWindow.postMessage({
+    type: 'kb61update',
+    rootNotes,
+    chordNotes,
+    lhNote
+  }, '*');
+}
+
+// Receive click events from iframe
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'kb61click') {
+    const midi = e.data.midi;
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    playWebAudio(midi, 500);
+    if (midiOutput) playMIDINote(midi, 500);
+  }
+});
+
+function kb61Click() {} // kept for compat
+
+
+function getPracVoicing(chord) {
+  const v = CHORD_VOICING[chord] || CHORD_VOICING['C'];
+  // 右手：中央C附近（MIDI 60-75），左手：低一个八度根音
+  const rh = v.notes.map(n => n < 60 ? n + 12 : n > 76 ? n - 12 : n);
+  const lh = v.root - 12; // 左手低八度
+  return { root: v.root, rh, lh, name: v.name, lhHint: v.lh, rhHint: v.rh };
+}
+
+function updatePracDisplay(chord) {
+  if (!chord) return;
+  const v = getPracVoicing(chord);
+
+  // 大字和弦
+  const el = document.getElementById('prac-chord');
+  if (el) el.textContent = chord;
+
+  // 功能级
+  const bd = currentHymn.jianpu.find(b => b.chord === chord);
+  const fnNames = {'I':'I 级·主和弦','IV':'IV 级·下属和弦','V':'V 级·属和弦','vi':'vi 级·关系小调','V7':'V7·属七'};
+  const fnEl = document.getElementById('prac-fn');
+  if (fnEl) fnEl.textContent = fnNames[bd?.fn] || '';
+
+  // 音符组成
+  const nEl = document.getElementById('prac-notes');
+  if (nEl) nEl.textContent = v.name;
+
+  // 键盘高亮
+  // 所有右手音 + 不同八度的同名音
+  const allChord = [];
+  for (let oct = 0; oct < 5; oct++) {
+    v.rh.forEach(n => {
+      const shifted = n + oct * 12;
+      if (shifted >= KB61_START && shifted <= KB61_END) allChord.push(shifted);
+      const down = n - oct * 12;
+      if (down >= KB61_START && down <= KB61_END) allChord.push(down);
+    });
+  }
+  const rootAll = [];
+  for (let oct = -2; oct <= 2; oct++) {
+    const r = v.root + oct * 12;
+    if (r >= KB61_START && r <= KB61_END) rootAll.push(r);
+  }
+  build61Keys(rootAll, [...new Set(allChord)], v.lh);
+
+  // 标注
+  const lblEl = document.getElementById('kb61-label');
+  if (lblEl) lblEl.innerHTML =
+    `<span style="color:#4a9eff">左手</span>: ${NOTE_NAMES[v.lh%12]}${Math.floor(v.lh/12)-1}&nbsp;&nbsp;` +
+    `<span style="color:#f0b429">根音</span>: ${NOTE_NAMES[v.root%12]}&nbsp;&nbsp;` +
+    `<span style="color:#3ddc84">右手和弦</span>: ${v.name}`;
+
+  // 更新拍格
+  renderPracBeatCells(chord);
+
+  // 手型提示
+  const hintEl = document.getElementById('prac-hint');
+  const styleHints = {
+    block:    `${v.lhHint}\n${v.rhHint}\n三音同时按`,
+    arpeggio: `${v.lhHint}\n右手逐音: 根→三→五→三`,
+    rhythm:   `${v.lhHint} 第1拍\n右手和弦 第2+3拍`,
+  };
+  if (hintEl) hintEl.textContent = styleHints[pracStyle] || '';
+
+  // 高亮进行条
+  document.querySelectorAll('[id^="pcr-"]').forEach(el => {
+    const active = el.id === 'pcr-' + chord;
+    el.style.borderColor = active ? '#f0b429' : '#1a3a20';
+    el.style.color       = active ? '#f0b429' : '#5a8a6a';
+    el.style.background  = active ? 'rgba(240,180,41,0.1)' : 'transparent';
+  });
+}
+
+function renderPracBeatCells(chord) {
+  const container = document.getElementById('prac-beat-cells');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const v = getPracVoicing(chord);
+  const beats4 = {
+    block:    [{t:'root',s:'和弦'},{t:'rest',s:'—'},{t:'rest',s:'—'},{t:'rest',s:'—'}],
+    arpeggio: [{t:'root',s:NOTE_NAMES[v.rh[0]%12]},{t:'chord',s:NOTE_NAMES[v.rh[1]%12]},{t:'chord',s:NOTE_NAMES[v.rh[2]%12]},{t:'chord',s:NOTE_NAMES[v.rh[1]%12]}],
+    rhythm:   [{t:'root',s:'咚'},{t:'chord',s:'哒'},{t:'chord',s:'哒'},{t:'rest',s:'—'}],
+  };
+  const beats = beats4[pracStyle] || beats4.block;
+  const beatsPerMeasure = currentHymn.time === '3/4' ? 3 : 4;
+
+  beats.slice(0, beatsPerMeasure).forEach((b, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'prac-cell';
+
+    const note = document.createElement('div');
+    note.className = 'prac-note on-' + b.t;
+    note.id = 'pnote-' + i;
+    note.textContent = b.s;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'prac-cell-lbl';
+    lbl.textContent = '第' + (i+1) + '拍';
+
+    cell.appendChild(note);
+    cell.appendChild(lbl);
+    container.appendChild(cell);
+  });
+}
+
+function litPracBeat(beatInMeasure) {
+  const beatsPerMeasure = currentHymn.time === '3/4' ? 3 : 4;
+  // 脉冲圆
+  ['pb1','pb2','pb3','pb4'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (i === beatInMeasure) {
+      el.className = 'pulse-dot' + (i===0?' big-dot':'') +
+        (i === 0 ? ' beat-on-root' : ' beat-on-chord');
+    } else {
+      el.className = 'pulse-dot' + (i===0?' big-dot':'');
+    }
+  });
+  // 拍格高亮
+  for (let i = 0; i < beatsPerMeasure; i++) {
+    const el = document.getElementById('pnote-' + i);
+    if (!el) continue;
+    const wasClass = el.className;
+    if (i === beatInMeasure) {
+      el.style.transform = 'scale(1.12)';
+      el.style.filter = 'brightness(1.4)';
+    } else {
+      el.style.transform = 'scale(1)';
+      el.style.filter = 'brightness(1)';
+    }
+  }
+}
+
+function setPracStyle(s) {
+  pracStyle = s;
+  ['block','arpeggio','rhythm'].forEach(id => {
+    const b = document.getElementById('psb-' + id);
+    if (b) b.className = 'psb' + (id === s ? ' active-psb' : '');
+  });
+  const chord = document.getElementById('prac-chord')?.textContent || currentHymn.chords?.[0] || 'C';
+  updatePracDisplay(chord);
+}
+
+function buildPracChordRow() {
+  const row = document.getElementById('prac-chord-row');
+  if (!row) return;
+  row.innerHTML = '';
+  const seen = [];
+  currentHymn.jianpu.forEach(b => { if (b.chord && !seen.includes(b.chord)) seen.push(b.chord); });
+  seen.forEach(ch => {
+    const div = document.createElement('div');
+    div.id = 'pcr-' + ch;
+    div.textContent = ch;
+    div.style.cssText = 'padding:5px 12px;background:transparent;border:1px solid #1a3a20;border-radius:2px;font-family:Libre Baskerville,serif;font-size:18px;color:#5a8a6a;cursor:pointer;transition:all 0.15s;flex-shrink:0';
+    div.onclick = () => {
+      updatePracDisplay(ch);
+      // 发声预览
+      if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      if (audioCtx.state==='suspended') audioCtx.resume();
+      const v = getPracVoicing(ch);
+      v.rh.forEach(n => playWebAudio(n, 600));
+      if (midiOutput) v.rh.forEach(n => playMIDINote(n, 600));
+    };
+    row.appendChild(div);
+  });
+}
+
+// 弹法练习播放
+let pracPlayTimer = null;
+let pracMeasBeat  = 0;
+let pracChordIdx2 = 0;
+
+function startPracPlay() {
+  stopPracPlay();
+  pracPlaying = true;
+  pracMeasBeat = 0;
+  pracChordIdx2 = 0;
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if (audioCtx.state==='suspended') audioCtx.resume();
+  document.getElementById('prac-play-btn').className = 'btn btn-green active';
+  tickPracPlay();
+}
+
+function stopPracPlay() {
+  pracPlaying = false;
+  if (pracPlayTimer) clearTimeout(pracPlayTimer);
+  const btn = document.getElementById('prac-play-btn');
+  if (btn) btn.className = 'btn btn-green';
+}
+
+function tickPracPlay() {
+  if (!pracPlaying) return;
+  const interval = (60 / bpm) * 1000;
+  const beatsPerMeasure = currentHymn.time === '3/4' ? 3 : 4;
+  const chords = currentHymn.chords || ['C'];
+  const chord = chords[pracChordIdx2 % chords.length];
+  const v = getPracVoicing(chord);
+
+  // 换小节时更新显示
+  if (pracMeasBeat === 0) updatePracDisplay(chord);
+
+  // 脉冲 + 拍格
+  litPracBeat(pracMeasBeat);
+
+  // 发音
+  const beats4 = {
+    block:    [[v.lh, ...v.rh], [], [], []],
+    arpeggio: [[v.lh, v.rh[0]], [v.rh[1]], [v.rh[2]], [v.rh[1]]],
+    rhythm:   [[v.lh], v.rh, v.rh, []],
+  };
+  const pattern = beats4[pracStyle] || beats4.block;
+  const toPlay = pattern[pracMeasBeat % pattern.length] || [];
+  const dur = interval * 0.80;
+  toPlay.forEach(n => {
+    if (outputMode !== 'midi') playWebAudio(n, dur);
+    if ((outputMode === 'midi' || outputMode === 'both') && midiOutput) playMIDINote(n, dur);
+  });
+
+  pracMeasBeat++;
+  if (pracMeasBeat >= beatsPerMeasure) {
+    pracMeasBeat = 0;
+    pracChordIdx2++;
+    if (pracChordIdx2 >= chords.length) {
+      if (pracLooping) pracChordIdx2 = 0;
+      else { stopPracPlay(); return; }
+    }
+  }
+  pracPlayTimer = setTimeout(tickPracPlay, interval);
+}
+
+let pracLoopActive = false;
+let pracLoopTimer  = null;
+let pracLoopI      = 0;
+
+function loopChords() {
+  pracLoopActive = !pracLoopActive;
+  const btn = document.getElementById('prac-loop-btn');
+  if (pracLoopActive) {
+    btn.className = 'btn btn-gold active';
+    pracLoopI = 0;
+    cycleNextChord();
+  } else {
+    btn.className = 'btn btn-gold';
+    if (pracLoopTimer) clearTimeout(pracLoopTimer);
+  }
+}
+
+function cycleNextChord() {
+  if (!pracLoopActive) return;
+  const chords = currentHymn.chords || ['C','F','G'];
+  updatePracDisplay(chords[pracLoopI % chords.length]);
+  pracLoopI++;
+  pracLoopTimer = setTimeout(cycleNextChord, (60/bpm)*1000 * (currentHymn.time==='3/4'?3:4));
+}
+
+// ======================================================
+// TAB SWITCHING (updated)
+// ======================================================
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const ids = ['score','midi','chord','practice'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById('tab-' + id)?.classList.add('active');
+  if (id === 'chord')    buildChordDetail();
+  if (id === 'practice') {
+    buildPracChordRow();
+    const firstChord = currentHymn.chords?.[0] || 'C';
+    // 延迟等 flex 布局算完再渲染键盘
+    setTimeout(() => updatePracDisplay(firstChord), 50);
+  }
+  if (id === 'score') setTimeout(resizeCanvases, 50);
+}
+
+// ======================================================
+// AI CHAT
+// ======================================================
+async function sendAI() {
+  const inp = document.getElementById('ai-inp');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+
+  const chat = document.getElementById('ai-chat');
+  const uMsg = document.createElement('div');
+  uMsg.className = 'ai-msg ai-msg-user fade-up';
+  uMsg.textContent = q;
+  chat.appendChild(uMsg);
+  chat.scrollTop = chat.scrollHeight;
+
+  const thinking = document.createElement('div');
+  thinking.className = 'ai-msg ai-msg-ai';
+  thinking.innerHTML = '<span style="color:var(--green-dim)">…</span>';
+  chat.appendChild(thinking);
+
+  const h = currentHymn;
+  const sys = `你是教会钢琴伴奏专业老师。用户正练习"${h.name}"（${h.key}大调，${h.time}，♩=${h.bpm}）。用户约70岁，有萨克斯及声乐背景，正学习钢琴以用于教会敬拜伴奏，使用Casio LK-280。请用简洁中文回答，重点实用。`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:800,
+        system: sys,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b=>b.text||'').join('') || '无回应';
+    thinking.textContent = text;
+    thinking.classList.add('fade-up');
+  } catch(e) {
+    thinking.textContent = '连接失败：' + e.message;
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+document.getElementById('ai-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendAI();
+});
+
+// ======================================================
+// CANVAS RESIZE
+// ======================================================
+window.addEventListener('resize', () => {
+  drawStaff();
+  drawPianoRoll();
+});
+
+// ======================================================
+// INIT — 等 DOM 完全渲染后再初始化
+// ======================================================
+window.addEventListener('load', function() {
+
+  // 1. 先加载曲目数据
+  loadHymn('jesuslovesC');
+
+  // 2. 等一帧让 flex 布局计算完毕，再设置 canvas 尺寸并绘制
+  requestAnimationFrame(() => {
+    setTimeout(resizeCanvases, 80);
+  });
+});
+
+function resizeCanvases() {
+  // 五线谱 canvas
+  const sc = document.getElementById('staff-canvas');
+  if (sc) {
+    sc.width  = sc.parentElement.clientWidth  || 800;
+    drawStaff();
+  }
+  // 钢琴卷帘 canvas
+  const prc = document.getElementById('piano-roll-canvas');
+  if (prc) {
+    prc.width  = prc.parentElement.clientWidth  || 800;
+    prc.height = prc.parentElement.clientHeight || 320;
+    drawPianoRoll();
+  }
+}
+
+window.addEventListener('resize', resizeCanvases);
+
+// Auto MIDI — inputs + outputs
+if (navigator.requestMIDIAccess) {
+  navigator.requestMIDIAccess({ sysex: false }).then(access => {
+    midiAccess = access;
+    if (access.inputs.size > 0 || access.outputs.size > 0) {
+      document.getElementById('pill-midi').className = 'pill pill-on';
+      document.getElementById('pill-midi').textContent = '⬤ MIDI 已连接';
+      access.inputs.forEach(input => {
+        input.onmidimessage = onMIDIMessage;
+        logMIDI('自动 IN：' + input.name);
+      });
+      // 自动选输出
+      const outSel = document.getElementById('midi-out-sel');
+      outSel.innerHTML = '<option value="">— 选择输出设备 —</option>';
+      access.outputs.forEach(output => {
+        const opt = document.createElement('option');
+        opt.value = output.id;
+        opt.textContent = output.name;
+        outSel.appendChild(opt);
+        logMIDI('自动 OUT：' + output.name);
+        if (!midiOutput &&
+            (output.name.toLowerCase().includes('lk') ||
+             output.name.toLowerCase().includes('casio') ||
+             output.name.toLowerCase().includes('m148') ||
+             output.name.toLowerCase().includes('midi out'))) {
+          selectMIDIOutput(output);
+          outSel.value = output.id;
+        }
+      });
+      if (!midiOutput && access.outputs.size > 0) {
+        const first = access.outputs.values().next().value;
+        selectMIDIOutput(first);
+        outSel.value = first.id;
+      }
+    }
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
