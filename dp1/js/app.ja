@@ -1,0 +1,79 @@
+// 应用初始化
+document.addEventListener('DOMContentLoaded', () => {
+  // 加载默认曲目
+  currentHymn = HYMNS.jesuslovesC;
+  bpm = currentHymn.bpm;
+  document.getElementById('bpm-range').value = bpm;
+  document.getElementById('bpm-display').textContent = bpm;
+  
+  // 渲染界面
+  renderJianpu();
+  renderChordProg();
+  drawStaff();
+  drawPianoRoll();
+  buildChordDetail();
+  updatePracDisplay(currentHymn.chords[0]);
+  buildPracChordRow();
+  
+  // 绑定事件
+  document.getElementById('play-pause').onclick = () => playing ? stopPlayback() : startPlayback();
+  document.getElementById('skip-back').onclick = () => { beatIndex = 0; onBeat(); };
+  document.getElementById('skip-fwd').onclick = () => { beatIndex = Math.min(currentHymn.jianpu.length-1, beatIndex+4); onBeat(); };
+  document.getElementById('bpm-range').oninput = (e) => setBPM(+e.target.value);
+  document.getElementById('output-mode').onchange = (e) => setOutputMode(e.target.value);
+  document.getElementById('zoom-btn').onclick = zoomToggle;
+  document.getElementById('metronome-btn').onclick = toggleMetronome;
+  document.getElementById('midi-connect').onclick = requestMIDI;
+  document.getElementById('ai-send').onclick = sendAI;
+  document.getElementById('ai-inp').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendAI(); });
+  
+  // 曲目点击
+  document.querySelectorAll('.hymn-item').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.hymn;
+      if (HYMNS[id]) {
+        currentHymn = HYMNS[id];
+        bpm = currentHymn.bpm;
+        document.getElementById('bpm-range').value = bpm;
+        document.getElementById('bpm-display').textContent = bpm;
+        renderJianpu();
+        renderChordProg();
+        drawStaff();
+        drawPianoRoll();
+        buildChordDetail();
+        updatePracDisplay(currentHymn.chords[0]);
+        buildPracChordRow();
+        document.getElementById('style-panel').style.display = id === 'doxology' ? 'block' : 'none';
+        stopPlayback();
+        beatIndex = 0;
+        document.querySelectorAll('.hymn-item').forEach(h => h.classList.remove('active'));
+        el.classList.add('active');
+      }
+    };
+  });
+  
+  // 弹法样式按钮
+  document.querySelectorAll('.psb').forEach(btn => {
+    btn.onclick = () => {
+      pracStyle = btn.dataset.ps;
+      document.querySelectorAll('.psb').forEach(b => b.classList.remove('active-psb'));
+      btn.classList.add('active-psb');
+      updatePracDisplay(document.getElementById('prac-chord').textContent);
+    };
+  });
+  
+  document.getElementById('prac-play-btn').onclick = () => pracPlaying ? stopPracPlay() : startPracPlay();
+  document.getElementById('prac-stop-btn').onclick = stopPracPlay;
+});
+
+function buildPracChordRow() {
+  const row = document.getElementById('prac-chord-row');
+  if (!row || !currentHymn) return;
+  row.innerHTML = '';
+  [...new Set(currentHymn.jianpu.map(b => b.chord).filter(Boolean))].forEach(ch => {
+    const div = document.createElement('div');
+    div.textContent = ch;
+    div.onclick = () => updatePracDisplay(ch);
+    row.appendChild(div);
+  });
+}
