@@ -1,0 +1,18 @@
+{
+  "id": "amazing_grace",
+  "title": "奇異恩典",
+  "originalKey": "G",
+  "timeSignature": "3/4",
+  "tempo": 72,
+  "sections": [
+    {
+      "name": "主歌",
+      "measures": [
+        { "chord": "G", "lyrics": "奇異恩典，何等甘甜", "beats": 3 },
+        { "chord": "C", "lyrics": "我罪已得赦免", "beats": 3 },
+        { "chord": "G", "lyrics": "前我失喪，今被尋回", "beats": 3 },
+        { "chord": "D7", "lyrics": "瞎眼今得看見", "beats": 3 }
+      ]
+    }
+  ]
+}
