@@ -3,13 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>智能钢琴学习系统 · 61键</title>
+    <title>智能钢琴学习系统 · 61键 · 钢琴音色</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 额外补充样式 - 确保编辑器模块显示正常 */
+        .control-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            background: #2a2a36;
+            padding: 1rem;
+            border-radius: 2rem;
+            margin: 1rem 0;
+        }
+        .control-bar label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ctrl-btn, .small-btn {
+            background: #3a3a4a;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: 0.1s;
+        }
+        .ctrl-btn:hover, .small-btn:hover {
+            background: #5a6e8a;
+            transform: scale(0.98);
+        }
+        #volumeSlider {
+            width: 100px;
+        }
+        .tab-btn[data-tab="editor"] {
+            background: #4a6a3a;
+        }
+        .note-pad-btn {
+            background: #3a4a5a;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .oct-btn {
+            background: #2a3a4a;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+        }
+        #notesPreview {
+            background: #1a1a2a;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            min-height: 60px;
+            color: #ddd;
+        }
+        textarea, input, select {
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #555;
+            background: #2a2a30;
+            color: white;
+        }
+        textarea::placeholder, input::placeholder {
+            color: #888;
+        }
+        hr {
+            border-color: #444;
+            margin: 1rem 0;
+        }
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #555;
+            display: inline-block;
+        }
+        .indicator.active {
+            background: #0f0;
+            box-shadow: 0 0 6px #0f0;
+        }
+        #staffCanvas, #rollCanvas {
+            background: #fff8e7;
+            border-radius: 1rem;
+            width: 100%;
+        }
+        #rollCanvas {
+            background: #1a1a2a;
+        }
+        .jpu-text {
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 0.5rem;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <header>
-            <h1>🎹 智能钢琴学习系统</h1>
+            <h1>🎹 智能钢琴学习系统 · 钢琴音色</h1>
             <div class="midi-status">
                 <span id="midiIndicator" class="indicator"></span>
                 <span id="midiStatusText">MIDI 未连接</span>
@@ -18,51 +123,68 @@
         </header>
 
         <main>
+            <!-- 五线谱区域 -->
             <div class="top-panel">
                 <div class="score-area" id="scoreArea">
-                    <!-- 五线谱+简谱画布 -->
-                    <canvas id="staffCanvas" width="800" height="200"></canvas>
-                    <div id="jpuArea" class="jpu-text"></div>
+                    <canvas id="staffCanvas" width="800" height="200" style="width:100%; height:auto; background:#fff8e7;"></canvas>
+                    <div id="jpuArea" class="jpu-text">🎵 简谱区域</div>
                 </div>
+                
+                <!-- 控制栏 -->
                 <div class="control-bar">
                     <button id="playBtn" class="ctrl-btn">▶ 播放</button>
                     <button id="stopBtn" class="ctrl-btn">⏹️ 停止</button>
                     <button id="recordBtn" class="ctrl-btn">🔴 录音</button>
+                    
                     <label>🎵 曲目:
                         <select id="hymnSelect"></select>
                     </label>
+                    
                     <label>🎚️ 速度:
                         <input type="range" id="tempoSlider" min="40" max="200" value="100">
                         <span id="tempoValue">100</span> BPM
                     </label>
+                    
+                    <label>🔊 音量:
+                        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                        <span id="volumeValue">70</span>%
+                    </label>
                 </div>
             </div>
 
+            <!-- 61键键盘 iframe -->
             <div class="middle-panel">
                 <div class="keyboard-container">
-                    <iframe id="kbFrame" src="kb61.html" title="61键钢琴键盘"></iframe>
+                    <iframe id="kbFrame" src="kb61.html" title="61键钢琴键盘" style="width:100%; height:210px; border:none; border-radius:2rem; background:#2c2c3a;"></iframe>
                 </div>
             </div>
 
+            <!-- 底部面板：弹法练习 / AI辅导 / 卷帘视图 / 曲目编辑 -->
             <div class="bottom-panel">
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="practice">✋ 弹法练习</button>
                     <button class="tab-btn" data-tab="ai">🤖 AI辅导</button>
                     <button class="tab-btn" data-tab="roll">📊 卷帘视图</button>
+                    <!-- 曲目编辑按钮会由 editor.js 动态添加，这里预留位置 -->
                 </div>
+                
                 <div id="practiceTab" class="tab-content active">
-                    <div id="practicePanel">等待练习模块加载...</div>
+                    <div id="practicePanel" style="padding:1rem;">🎯 选择一个曲目开始练习</div>
                 </div>
+                
                 <div id="aiTab" class="tab-content">
-                    <div id="aiPanel">AI 辅导模块就绪</div>
+                    <div id="aiPanel" style="padding:1rem;">🤖 AI辅导模块就绪，点击键盘开始练习，AI会给你实时反馈</div>
                 </div>
+                
                 <div id="rollTab" class="tab-content">
-                    <canvas id="rollCanvas" width="800" height="300"></canvas>
+                    <canvas id="rollCanvas" width="800" height="300" style="width:100%; background:#1a1a2a; border-radius:1rem;"></canvas>
                 </div>
+                <!-- 曲目编辑面板会由 editor.js 动态添加到这里 -->
             </div>
         </main>
     </div>
 
+    <!-- 所有脚本模块 (顺序重要) -->
     <script src="js/hymns.js"></script>
     <script src="js/player.js"></script>
     <script src="js/midi.js"></script>
@@ -70,6 +192,7 @@
     <script src="js/keyboard.js"></script>
     <script src="js/practice.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/editor.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
