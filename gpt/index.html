@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Worship Piano Trainer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+<style>
+body {
+    margin:0;
+    background:#0d1117;
+    color:#e6edf3;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.top {
+    padding:20px;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+    border-bottom:1px solid #30363d;
+}
+
+.panel {
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    padding:20px;
+    flex-wrap:wrap;
+}
+
+.group {
+    background:#161b22;
+    padding:15px;
+    border-radius:10px;
+}
+
+.group h3 {
+    margin-top:0;
+    font-size:14px;
+    color:#8b949e;
+}
+
+button {
+    background:#21262d;
+    color:#e6edf3;
+    border:none;
+    padding:10px 16px;
+    margin:4px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+button.active {
+    background:#2ea043;
+}
+
+button:hover {
+    background:#30363d;
+}
+
+.main {
+    text-align:center;
+    margin-top:20px;
+}
+
+.chord {
+    font-size:64px;
+    font-weight:bold;
+}
+
+.next {
+    color:#8b949e;
+    margin-top:5px;
+}
+
+.progression {
+    margin-top:20px;
+    font-size:20px;
+    letter-spacing:5px;
+}
+
+.progression span {
+    padding:5px 10px;
+    border-radius:6px;
+}
+
+.progression .current {
+    background:#2ea043;
+}
+
+.footer {
+    margin-top:20px;
+    color:#8b949e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">🎹 Worship Piano Trainer</div>
+
+<div class="panel">
+
+<div class="group">
+<h3>Key</h3>
+<button onclick="setKey('C',this)" class="active">C</button>
+<button onclick="setKey('F',this)">F</button>
+<button onclick="setKey('G',this)">G</button>
+</div>
+
+<div class="group">
+<h3>Style</h3>
+<button onclick="setMode('block',this)" class="active">Block</button>
+<button onclick="setMode('arpeggio',this)">Arpeggio</button>
+<button onclick="setMode('rhythm',this)">Rhythm</button>
+</div>
+
+<div class="group">
+<h3>Speed</h3>
+<button onclick="setSpeed(0.7,this)">Slow</button>
+<button
