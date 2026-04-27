@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教会钢琴练习系统 Pro · 模块化</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-cross">✝</div>
+    <div>
+      <div class="logo-text">教会钢琴练习系统 Pro</div>
+      <div class="logo-sub">模块化 · MIDI · LK-280</div>
+    </div>
+  </div>
+  <div class="status-pills">
+    <div class="pill pill-off" id="pill-midi">⬤ MIDI 未连接</div>
+    <div class="pill pill-warn" id="pill-lk">⬤ LK-280</div>
+    <div class="pill pill-off" id="pill-zoom">⬤ Zoom 待机</div>
+    <div class="pill pill-on">⬤ AI 就绪</div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- 左侧边栏：曲目库 + AI 对话 -->
+  <div class="sidebar-left">
+    <div class="section-title">曲目库</div>
+    <div class="section-title" style="color:var(--gold);border-color:var(--gold-dim)">★ 本次作业</div>
+    <div class="hymn-item active" data-hymn="jesuslovesC" id="h-jesuslovesC">
+      <div class="h-name">耶稣爱你 <span style="color:var(--green);font-size:11px">C调</span></div>
+      <div class="h-en">Jesus Loves You · C major</div>
+      <div class="h-tags"><span class="tag tag-C">C</span><span class="tag tag-C">I-IV-V</span></div>
+    </div>
+    <div class="hymn-item" data-hymn="jesuslovesF" id="h-jesuslovesF">
+      <div class="h-name">耶稣爱你 <span style="color:var(--gold);font-size:11px">F调</span></div>
+      <div class="h-en">Jesus Loves You · F major</div>
+      <div class="h-tags"><span class="tag tag-F">F</span><span class="tag tag-F">含Bb</span></div>
+    </div>
+    <div class="hymn-item" data-hymn="jesuslovesG" id="h-jesuslovesG">
+      <div class="h-name">耶稣爱你 <span style="color:var(--green);font-size:11px">G调</span></div>
+      <div class="h-en">Jesus Loves You · G major</div>
+      <div class="h-tags"><span class="tag tag-G">G</span><span class="tag tag-G">I-IV-V</span></div>
+    </div>
+    <div class="hymn-item" data-hymn="doxology" id="h-doxology">
+      <div class="h-name">三一颂 <span style="color:var(--accent);font-size:11px">三种弹法</span></div>
+      <div class="h-en">Doxology · 柱式/分解/节奏</div>
+      <div class="h-tags"><span class="tag tag-G">G</span></div>
+    </div>
+
+    <!-- 弹法选择面板（仅三一颂显示） -->
+    <div id="style-panel" style="display:none">
+      <div class="section-title" style="margin-top:8px">弹法选择</div>
+      <div class="style-btns">
+        <button class="style-btn active" data-style="block">① 柱式 · 庄重</button>
+        <button class="style-btn" data-style="arpeggio">② 分解 · 流动</button>
+        <button class="style-btn" data-style="rhythm">③ 节奏 · 敬拜感</button>
+      </div>
+      <div id="style-hint" class="style-hint">左手：根音单音<br>右手：三音柱式和弦</div>
+    </div>
+
+    <div class="section-title" style="margin-top:12px">其他曲目</div>
+    <div class="hymn-item" data-hymn="amazing"><div class="h-name">奇异恩典</div></div>
+    <div class="hymn-item" data-hymn="gloria"><div class="h-name">荣耀归于圣父</div></div>
+
+    <div class="section-title" style="margin-top:12px">AI 辅导</div>
+    <div class="ai-chat" id="ai-chat">
+      <div class="ai-msg ai-msg-ai fade-up">选择曲目后，我可以帮你分析和弦、织体。</div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-inp" id="ai-inp" placeholder="问题…">
+      <button class="btn btn-green" id="ai-send">问</button>
+    </div>
+  </div>
+
+  <!-- 中央区域 -->
+  <div class="main">
+    <div class="tab-bar">
+      <div class="tab active" data-tab="score">五线谱 + 简谱</div>
+      <div class="tab" data-tab="midi">MIDI 设置</div>
+      <div class="tab" data-tab="chord">和弦图</div>
+      <div class="tab" data-tab="practice" style="color:var(--gold)">🎹 弹法练习</div>
+    </div>
+
+    <!-- Tab: 乐谱 -->
+    <div class="tab-content active" id="tab-score">
+      <canvas id="staff-canvas" height="160"></canvas>
+      <div class="jianpu-wrap">
+        <div class="jianpu-row" id="jianpu-row"></div>
+      </div>
+      <div class="midi-scroll-wrap">
+        <canvas id="piano-roll-canvas"></canvas>
+        <div class="chord-overlay" id="chord-overlay"></div>
+      </div>
+    </div>
+
+    <!-- Tab: MIDI -->
+    <div class="tab-content" id="tab-midi">
+      <div class="midi-panel">
+        <div class="section-title">MIDI 设备</div>
+        <div id="midi-device-list"></div>
+        <button class="btn btn-green" id="midi-connect">🎹 连接 MIDI / LK-280</button>
+        <div class="section-title">MIDI LOG</div>
+        <div id="midi-log"></div>
+      </div>
+    </div>
+
+    <!-- Tab: 和弦图 -->
+    <div class="tab-content" id="tab-chord">
+      <div id="chord-detail-area" class="chord-grid"></div>
+    </div>
+
+    <!-- Tab: 弹法练习 -->
+    <div class="tab-content" id="tab-practice">
+      <div class="practice-container">
+        <div class="practice-header">
+          <div><div id="prac-chord">C</div><div id="prac-notes">C–E–G</div></div>
+          <div class="prac-style-btns">
+            <button class="psb active-psb" data-ps="block">① 柱式</button>
+            <button class="psb" data-ps="arpeggio">② 分解</button>
+            <button class="psb" data-ps="rhythm">③ 节奏</button>
+          </div>
+          <div class="pulse-dots">
+            <div id="pb1" class="pulse-dot big-dot">咚</div><div id="pb2" class="pulse-dot">哒</div>
+            <div id="pb3" class="pulse-dot">哒</div><div id="pb4" class="pulse-dot">哒</div>
+          </div>
+          <div id="prac-beat-cells" class="beat-cells"></div>
+          <div id="prac-hint" class="prac-hint"></div>
+        </div>
+        <div class="practice-controls">
+          <span>和弦进行</span>
+          <div id="prac-chord-row" class="chord-row"></div>
+          <button id="prac-play-btn" class="btn btn-green">▶ 开始</button>
+          <button id="prac-stop-btn" class="btn">◼ 停止</button>
+          <button id="prac-loop-btn" class="btn btn-gold">⟳ 循环</button>
+        </div>
+        <div class="piano-61-area">
+          <div class="legend"><span style="color:#4a9eff">█ 左手根音</span><span style="color:#f0b429">█ 根音</span><span style="color:#3ddc84">█ 和弦音</span></div>
+          <iframe id="kb61-frame" src="kb61.html" class="kb61-iframe"></iframe>
+          <div id="kb61-label" class="kb61-label"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部控制栏 -->
+    <div class="transport">
+      <div class="transport-btn" id="skip-back">⏮</div>
+      <div class="transport-btn" id="play-pause">▶</div>
+      <div class="transport-btn" id="skip-fwd">⏭</div>
+      <div class="bpm-control"><span>BPM</span><input type="range" min="40" max="160" id="bpm-range"><span id="bpm-display" class="bpm-val">84</span></div>
+      <span>KEY</span><select id="key-sel" class="key-sel"><option value="C">C</option><option value="G">G</option><option value="F">F</option></select>
+      <div id="time-display" class="time-display">0:00</div>
+      <select id="output-mode" class="key-sel"><option value="webaudio">🔊 扬声器</option><option value="midi">🎹 MIDI</option><option value="both">两者</option></select>
+      <button id="metronome-btn" class="btn">♩ 节拍器</button>
+      <button id="zoom-btn" class="btn btn-gold">📹 Zoom</button>
+    </div>
+  </div>
+
+  <!-- 右侧边栏 -->
+  <div class="sidebar-right">
+    <div class="right-section">
+      <div class="section-title">LK-280 实时反馈</div>
+      <div class="lk-display"><div><span>CASIO LK-280</span><span id="lk-status">待机</span></div><div id="lk-note">— 等待按键 —</div></div>
+      <div class="feedback-item"><span>🎵 正确率</span><span class="fb-val" id="fb-acc">—</span></div>
+      <div class="feedback-item"><span>🎹 上次按键</span><span class="fb-val" id="fb-last">—</span></div>
+    </div>
+    <div class="right-section">
+      <div class="section-title">Zoom 敬拜输出</div>
+      <div class="zoom-status"><div class="zoom-dot" id="zoom-dot"></div><span id="zoom-label">未连接</span></div>
+      <div class="vumeter"><div class="vumeter-fill" id="vu-fill"></div></div>
+    </div>
+    <div class="right-section">
+      <div class="section-title">和弦进行</div>
+      <div id="chord-prog" class="chord-prog"></div>
+      <div id="chord-analysis" class="chord-analysis"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/hymns.js"></script>
+<script src="js/player.js"></script>
+<script src="js/score.js"></script>
+<script src="js/practice.js"></script>
+<script src="js/midi.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
