@@ -8,38 +8,49 @@
 </head>
 <body>
   <div id="app">
-    <!-- 控制區：只保留練習必需 -->
+    <header class="top-bar">
+      <h1>🎹 教會鋼琴訓練系統</h1>
+      <select id="songSelect"><option value="">載入中...</option></select>
+    </header>
+
     <div class="controls">
-      <select id="songSelect"></select>
       <select id="keySelect">
-        <option value="C">C</option><option value="F">F</option><option value="G" selected>G</option>
+        <option value="C">C</option><option value="D">D</option><option value="E">E</option>
+        <option value="F">F</option><option value="G" selected>G</option><option value="A">A</option>
       </select>
       <select id="patternSelect">
-        <option value="block">🔲 柱式</option>
+        <option value="block"> 柱式</option>
         <option value="broken">🌊 分解</option>
-        <option value="rhythmic">🥁 節奏</option>
+        <option value="rhythmic"> 節奏</option>
       </select>
-      <button id="btnSlow">🐌 慢速</button>
-      <button id="btnLoop">🔁 循環</button>
-      <button id="btnNext">⏭ 下一小節</button>
+      <button id="btnSlow" class="ctrl-btn">🐌 慢速</button>
+      <button id="btnLoop" class="ctrl-btn">🔁 循環</button>
+      <button id="btnPrev" class="ctrl-btn">⏮ 上一節</button>
+      <button id="btnNext" class="ctrl-btn primary">⏭ 下一節</button>
     </div>
-    
-    <!-- 練習區：大字体 + 高對比 -->
-    <div id="practiceView">
-      <div id="chordDisplay" class="chord-large">G</div>
-      <div id="lyricsDisplay">奇異恩典，何等甘甜</div>
-      <div id="patternGrid" class="grid-container"></div>
-      <div id="hintDisplay" class="hint">第1拍彈完整和弦...</div>
-    </div>
-    
-    <!-- 反饋區（可隱藏） -->
-    <div id="feedbackPanel" class="hidden">
-      <div>反應時間: <span id="reactionTime">-</span>ms</div>
-      <div>準確度: <span id="accuracy">-</span>%</div>
-    </div>
+
+    <main class="practice-area" id="practiceArea">
+      <div class="chord-progression" id="chordProgression">
+        <!-- 動態生成：[G] → [C] → [D7] -->
+      </div>
+      <div class="current-chord" id="currentChord">G</div>
+      <div class="lyrics" id="lyrics">奇異恩典，何等甘甜</div>
+      
+      <div class="rhythm-grid" id="rhythmGrid">
+        <!-- 動態生成節奏點 ● ○ ○ ○ -->
+      </div>
+      <div class="hint" id="hint">第1拍彈完整和弦，其餘拍休止或輕帶根音</div>
+    </main>
+
+    <footer class="feedback-panel" id="feedbackPanel">
+      <button id="btnConfirm" class="feedback-btn">✅ 已彈奏（記錄反應時間）</button>
+      <div class="metrics">
+        <span>反應時間: <b id="reactionTime">-</b> ms</span>
+        <span>準確度: <b id="accuracy">-</b> %</span>
+      </div>
+    </footer>
   </div>
-  
-  <!-- 模組載入 -->
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
