@@ -1,0 +1,24 @@
+{
+  "id": "jesus_loves_you",
+  "title": "耶穌愛你",
+  "originalKey": "C",
+  "timeSignature": "4/4",
+  "tempo": 72,
+  "difficulty": "beginner",
+  "tags": ["兒童", "福音", "主日學", "CFG基礎"],
+  "sections": [
+    {
+      "name": "主歌",
+      "measures": [
+        { "chord": "C", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "G", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "Am", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "F", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "C", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "G", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "F", "lyrics": "耶穌愛你", "beats": 4 },
+        { "chord": "C", "lyrics": "♪", "beats": 4 }
+      ]
+    }
+  ]
+}
