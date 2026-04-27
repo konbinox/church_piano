@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>教會鋼琴訓練系統</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 控制區：只保留練習必需 -->
+    <div class="controls">
+      <select id="songSelect"></select>
+      <select id="keySelect">
+        <option value="C">C</option><option value="F">F</option><option value="G" selected>G</option>
+      </select>
+      <select id="patternSelect">
+        <option value="block">🔲 柱式</option>
+        <option value="broken">🌊 分解</option>
+        <option value="rhythmic">🥁 節奏</option>
+      </select>
+      <button id="btnSlow">🐌 慢速</button>
+      <button id="btnLoop">🔁 循環</button>
+      <button id="btnNext">⏭ 下一小節</button>
+    </div>
+    
+    <!-- 練習區：大字体 + 高對比 -->
+    <div id="practiceView">
+      <div id="chordDisplay" class="chord-large">G</div>
+      <div id="lyricsDisplay">奇異恩典，何等甘甜</div>
+      <div id="patternGrid" class="grid-container"></div>
+      <div id="hintDisplay" class="hint">第1拍彈完整和弦...</div>
+    </div>
+    
+    <!-- 反饋區（可隱藏） -->
+    <div id="feedbackPanel" class="hidden">
+      <div>反應時間: <span id="reactionTime">-</span>ms</div>
+      <div>準確度: <span id="accuracy">-</span>%</div>
+    </div>
+  </div>
+  
+  <!-- 模組載入 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
