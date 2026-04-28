@@ -296,10 +296,6 @@ function tickPracPlay() {
   pracPlayTimer = setTimeout(tickPracPlay, interval);
 }
 
-let pracLoopActive = false;
-let pracLoopTimer  = null;
-let pracLoopI      = 0;
-
 function loopChords() {
   pracLoopActive = !pracLoopActive;
   const btn = document.getElementById('prac-loop-btn');
