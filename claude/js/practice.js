@@ -227,9 +227,6 @@ function buildPracChordRow() {
 }
 
 // 弹法练习播放
-let pracPlayTimer = null;
-let pracMeasBeat  = 0;
-let pracChordIdx2 = 0;
 
 function startPracPlay() {
   stopPracPlay();
