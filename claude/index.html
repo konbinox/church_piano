@@ -125,8 +125,22 @@ body {
 <div class="hymn-topbar">
   <span class="hymn-topbar-label">📖 曲目库</span>
 
-  <!-- 下拉由 app.js buildHymnDropdown() 动态填充 -->
-  <select id="hymn-select-top"></select>
+  <select id="hymn-select-top" onchange="loadHymn(this.value)">
+    <optgroup label="★ 本次作业">
+      <option value="jesuslovesC">耶稣爱你（C调）　C调</option>
+      <option value="jesuslovesF">耶稣爱你（F调）　F调</option>
+      <option value="jesuslovesG">耶稣爱你（G调）　G调</option>
+      <option value="doxology">三一颂 Doxology　G调</option>
+    </optgroup>
+    <optgroup label="其他曲目">
+      <option value="amazing">奇异恩典　G调</option>
+      <option value="father">这是天父世界　C调</option>
+      <option value="gloria">荣耀归于圣父　F调</option>
+      <option value="holy">圣哉圣哉圣哉　Bb调</option>
+      <option value="itiswell">好像一道河　Bb调</option>
+      <option value="joyful">喜乐颂　D调</option>
+    </optgroup>
+  </select>
 
   <!-- 三一颂弹法面板（加载三一颂时自动显示） -->
   <div id="style-panel">
