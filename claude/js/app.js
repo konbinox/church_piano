@@ -56,10 +56,9 @@ function loadHymn(id) {
   const keyMap = { G:'G', C:'C', F:'F', Bb:'Bb', D:'D', Eb:'Eb' };
   document.getElementById('key-sel').value = keyMap[currentHymn.key] || 'G';
 
-  // 三一颂显示弹法面板
-  const isDoxology = id === 'doxology';
+  // 所有曲目都显示弹法面板
   const stylePanel = document.getElementById('style-panel');
-  if (stylePanel) stylePanel.style.display = isDoxology ? 'block' : 'none';
+  if (stylePanel) stylePanel.style.display = 'block';
 
   renderJianpu();
   renderChordProg();
@@ -243,10 +242,7 @@ function initMIDI() {
 // 初始化入口
 // ======================================================
 window.addEventListener('load', function () {
-  // 1. 构建顶部下拉曲库
-  buildHymnDropdown();
-
-  // 2. 加载默认曲目
+  // 1. 加载默认曲目
   loadHymn('jesuslovesC');
 
   // 3. 等 flex 布局完毕再设置 canvas 尺寸
