@@ -1,68 +1,149 @@
 // ═══════════════════════════════════════════════════
-// player.js — 统一播放引擎
-// 所有发音、计时、节拍事件从这里发出
+// player.js — 统一播放引擎（修复版）
+// 修复：audioCtx/setBPM 重复声明
+// 升级：onBeat 播放完整和弦（柱式/分解/节奏）
 // ═══════════════════════════════════════════════════
 
-// ── 全局状态 ──
-let currentHymn = null;   // 由 loadHymn() 设置
-let bpm         = 84;
-let playing     = false;
-let looping     = false;
-let beatIndex   = 0;
-let beatTimer   = null;
-let sessionStart= null;
-let sessionTimer= null;
-let outputMode  = 'webaudio'; // 'webaudio' | 'midi' | 'both'
-let audioCtx    = null;
+let currentHymn  = null;
+let bpm          = 84;
+let playing      = false;
+let looping      = false;
+let beatIndex    = 0;
+let beatTimer    = null;
+let sessionStart = null;
+let sessionTimer = null;
+let outputMode   = 'webaudio';
+let audioCtx     = null;
+let metronomePlaying = false;
 
-// ── 节拍事件订阅者 ──
 const beatListeners = [];
 function onBeatEvent(fn) { beatListeners.push(fn); }
 
-// ======================================================
-// PLAYBACK ENGINE
-// ======================================================
-function togglePlay() {
-  playing ? stopPlayback() : startPlayback();
+// ── 和弦音符表 ──
+const CHORD_NOTES = {
+  C:  ['C4','E4','G4'],
+  F:  ['F4','A4','C5'],
+  G:  ['G4','B4','D5'],
+  D:  ['D4','F#4','A4'],
+  Am: ['A3','C4','E4'],
+  Em: ['E4','G4','B4'],
+  Bb: ['Bb3','D4','F4'],
+  Eb: ['Eb4','G4','Bb4'],
+};
+
+function getChordNotes(name) {
+  return CHORD_NOTES[name] || CHORD_NOTES['C'];
 }
 
+function noteNameToMIDI(n) {
+  const map = {'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
+  const pitch = n.replace(/\d/,'');
+  const oct   = parseInt(n.slice(-1));
+  return (map[pitch]??0) + (oct+1)*12;
+}
+
+// ── 振荡器单音（钢琴包络）──
+function playOsc(noteName, startTime, durationSec) {
+  const freq  = 440 * Math.pow(2, (noteNameToMIDI(noteName) - 69) / 12);
+  const osc1  = audioCtx.createOscillator();
+  const osc2  = audioCtx.createOscillator();
+  const merge = audioCtx.createGain();
+  const gain  = audioCtx.createGain();
+  osc1.type = 'triangle'; osc1.frequency.value = freq;
+  osc2.type = 'sine';     osc2.frequency.value = freq * 2.01;
+  merge.gain.value = 0.5;
+  osc1.connect(merge); osc2.connect(merge); merge.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(0.28, startTime + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.10, startTime + 0.15);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + durationSec);
+  osc1.start(startTime); osc1.stop(startTime + durationSec + 0.05);
+  osc2.start(startTime); osc2.stop(startTime + durationSec + 0.05);
+}
+
+// ── 和弦播放（支持三种弹法）──
+function playChordWebAudio(chordName, durationMs) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const notes = getChordNotes(chordName);
+  const dur   = durationMs / 1000;
+  const now   = audioCtx.currentTime;
+  const style = (typeof currentStyle !== 'undefined') ? currentStyle : 'block';
+
+  if (style === 'arpeggio') {
+    notes.forEach((n, i) => playOsc(n, now + i * 0.12, dur));
+  } else if (style === 'rhythm') {
+    notes.forEach(n => playOsc(n, now, dur * 0.5));
+    notes.forEach(n => playOsc(n, now + dur * 0.55, dur * 0.4));
+  } else {
+    // block（默认）
+    notes.forEach(n => playOsc(n, now, dur));
+  }
+}
+
+// ── MIDI 输出 ──
+function playMIDINote(midiNote, durationMs) {
+  if (!midiOutput) return;
+  midiOutput.send([0x90, midiNote, 90]);
+  setTimeout(() => { try { midiOutput.send([0x80, midiNote, 0]); } catch(e){} }, durationMs);
+}
+
+function playMIDIChord(chordName, durationMs) {
+  if (!midiOutput) return;
+  const notes = getChordNotes(chordName).map(noteNameToMIDI);
+  notes.forEach(n => midiOutput.send([0x90, n, 90]));
+  setTimeout(() => { notes.forEach(n => { try { midiOutput.send([0x80, n, 0]); } catch(e){} }); }, durationMs);
+}
+
+function testMIDIOut() {
+  if (!midiOutput) { logMIDI('⚠ 请先连接 MIDI 设备'); return; }
+  [60,62,64,65,67,69,71,72].forEach((n,i) => setTimeout(() => playMIDINote(n, 300), i * 350));
+  logMIDI('▶ 测试音阶 → ' + midiOutput.name);
+}
+
+// ── 播放控制 ──
+function togglePlay() { playing ? stopPlayback() : startPlayback(); }
+
 function startPlayback() {
+  if (!currentHymn) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   playing = true;
   document.getElementById('btn-play').textContent = '⏸';
   document.getElementById('btn-play').classList.add('active');
   if (!sessionStart) { sessionStart = Date.now(); startSessionTimer(); }
+  onBeat();
   scheduleBeat();
 }
 
 function stopPlayback() {
   playing = false;
   if (beatTimer) clearTimeout(beatTimer);
+  beatTimer = null;
   document.getElementById('btn-play').textContent = '▶';
   document.getElementById('btn-play').classList.remove('active');
 }
 
 function scheduleBeat() {
   if (!playing) return;
-  const interval = (60 / bpm) * 1000;
   beatTimer = setTimeout(() => {
     beatIndex = (beatIndex + 1) % currentHymn.jianpu.length;
     if (beatIndex === 0 && !looping) { stopPlayback(); return; }
     onBeat();
     scheduleBeat();
-  }, interval);
+  }, (60 / bpm) * 1000);
 }
 
 function onBeat() {
-  // Jianpu highlight
+  if (!currentHymn) return;
+
+  // 简谱高亮 + 滚动
   document.querySelectorAll('.jianpu-num').forEach(el => el.classList.remove('active-beat'));
   document.getElementById('jp-' + beatIndex)?.querySelector('.jianpu-num')?.classList.add('active-beat');
-
-  // Scroll jianpu — 滚动容器而非移动整行
   const wrap = document.querySelector('.jianpu-wrap');
   const activeEl = document.getElementById('jp-' + beatIndex);
   if (activeEl && wrap) {
-    const center = activeEl.offsetLeft - wrap.clientWidth / 2 + activeEl.offsetWidth / 2;
-    wrap.scrollTo({ left: Math.max(0, center), behavior: 'smooth' });
+    wrap.scrollTo({ left: Math.max(0, activeEl.offsetLeft - wrap.clientWidth/2 + activeEl.offsetWidth/2), behavior: 'smooth' });
   }
 
   updateChordOverlay(beatIndex);
@@ -70,116 +151,56 @@ function onBeat() {
   drawPianoRoll();
   updateVU();
 
-  // ── 真实音频输出 ──
-  const beat = currentHymn.jianpu[beatIndex];
-  const key  = document.getElementById('key-sel')?.value || currentHymn.key;
-  const midiNote = beatToMIDI(beat, key);
-  const noteDuration = (60 / bpm) * 0.85 * 1000; // 85% 音符时值，留一点断句
+  // 计算当前拍对应的和弦
+  const chordLen  = currentHymn.chords?.length || 1;
+  const beatsPerChord = Math.max(1, Math.floor(currentHymn.jianpu.length / chordLen));
+  const chordIdx  = Math.floor(beatIndex / beatsPerChord) % chordLen;
+  const chordName = currentHymn.chords?.[chordIdx] || 'C';
 
-  if (outputMode === 'webaudio' || outputMode === 'both') {
-    playWebAudio(midiNote, noteDuration);
-  }
-  if ((outputMode === 'midi' || outputMode === 'both') && midiOutput) {
-    playMIDINote(midiNote, noteDuration);
-  }
+  // 发声
+  const noteDur = (60 / bpm) * 0.85 * 1000;
+  if (outputMode === 'webaudio' || outputMode === 'both') playChordWebAudio(chordName, noteDur);
+  if ((outputMode === 'midi'    || outputMode === 'both') && midiOutput) playMIDIChord(chordName, noteDur);
 
-  // Update time
+  beatListeners.forEach(fn => fn(beatIndex, chordName));
+
+  // 时间显示
   if (sessionStart) {
-    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-    const m = Math.floor(elapsed / 60), s = elapsed % 60;
-    document.getElementById('time-display').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    const e = Math.floor((Date.now() - sessionStart) / 1000);
+    document.getElementById('time-display').textContent = Math.floor(e/60) + ':' + (e%60 < 10 ? '0' : '') + e%60;
   }
 }
 
-// ── Web Audio 合成（钢琴音色近似）──
-function playWebAudio(midiNote, durationMs) {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+// ── 跳转 ──
+function skipBack() { beatIndex = 0; if (currentHymn) { drawStaff(); drawPianoRoll(); updateChordOverlay(0); } }
+function skipFwd()  {
+  if (!currentHymn) return;
+  beatIndex = Math.min(currentHymn.jianpu.length-1, beatIndex + (currentHymn.time==='3/4'?3:4));
+  drawStaff(); drawPianoRoll(); updateChordOverlay(beatIndex);
+}
+function toggleLoop()   { looping = !looping; document.getElementById('btn-loop')?.classList.toggle('active', looping); }
+function setBPM(v)      { bpm = v; document.getElementById('bpm-display').textContent = v; }
+function transposeKey() {}
+function setMode()      {}
 
-  const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
-  const now  = audioCtx.currentTime;
-
-  // 基音
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc1.type = 'triangle';
-  osc1.frequency.value = freq;
-  osc2.type = 'sine';
-  osc2.frequency.value = freq * 2.01; // 轻微失谐二次谐波
-
-  const merge = audioCtx.createGain();
-  merge.gain.value = 0.5;
-  osc1.connect(merge);
-  osc2.connect(merge);
-  merge.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  // 钢琴包络：快攻，缓衰
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.35, now + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.12, now + 0.15);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + durationMs / 1000);
-
-  osc1.start(now); osc1.stop(now + durationMs / 1000 + 0.05);
-  osc2.start(now); osc2.stop(now + durationMs / 1000 + 0.05);
+function setOutputMode(mode) {
+  outputMode = mode;
+  const s = document.getElementById('midi-out-sel');
+  if (s) s.style.display = (mode==='midi'||mode==='both') ? 'inline-block' : 'none';
+  if ((mode==='midi'||mode==='both') && !midiAccess) requestMIDI();
 }
 
-// ── MIDI 输出发音 ──
-function playMIDINote(midiNote, durationMs) {
-  if (!midiOutput) return;
-  const ch = 0; // MIDI 通道 1
-  midiOutput.send([0x90 | ch, midiNote, 90]);   // Note On, velocity 90
-  setTimeout(() => {
-    try { midiOutput.send([0x80 | ch, midiNote, 0]); } catch(e){}
-  }, durationMs);
-}
-
-function testMIDIOut() {
-  if (!midiOutput) { logMIDI('⚠ 请先连接 MIDI 设备并选择输出'); return; }
-  // 播放 C 大调音阶测试
-  const scale = [60,62,64,65,67,69,71,72];
-  scale.forEach((n, i) => {
-    setTimeout(() => playMIDINote(n, 300), i * 350);
-  });
-  logMIDI('▶ 测试音阶发送至 ' + midiOutput.name);
-}
-
-function skipBack() { beatIndex = 0; drawStaff(); drawPianoRoll(); updateChordOverlay(0); }
-function skipFwd()  { beatIndex = Math.min(currentHymn.jianpu.length - 1, beatIndex + (currentHymn.time === '3/4' ? 3 : 4)); drawStaff(); drawPianoRoll(); updateChordOverlay(beatIndex); }
-
-function toggleLoop() {
-  looping = !looping;
-  document.getElementById('btn-loop').classList.toggle('active', looping);
-}
-
-function setBPM(v) {
-  bpm = v;
-  document.getElementById('bpm-display').textContent = v;
-}
-
-function transposeKey(k) {
-  // In a real app we'd transpose all pitches; here just update display
-  document.getElementById('stat-streak') && (document.getElementById('stat-streak').textContent = k);
-}
-
-function setMode(m) { /* mode switching hook */ }
-
-// ======================================================
-// 🥁 节奏引导音 (咚·哒哒)
-// ======================================================
+// ── 节奏引导 ──
 let rhythmGuideActive = false;
-let rhythmGuideTimer = null;
-let rhythmBeatCount = 0;
+let rhythmGuideTimer  = null;
+let rhythmBeatCount   = 0;
 
 function toggleRhythmGuide() {
   rhythmGuideActive = !rhythmGuideActive;
   const btn = document.getElementById('btn-rhythm');
   btn.style.borderColor = rhythmGuideActive ? '#3ddc84' : '';
-  btn.style.color = rhythmGuideActive ? '#3ddc84' : '';
-  btn.textContent = rhythmGuideActive ? '🥁 引导中…' : '🥁 节奏引导';
-
+  btn.style.color       = rhythmGuideActive ? '#3ddc84' : '';
+  btn.textContent       = rhythmGuideActive ? '🥁 引导中…' : '🥁 节奏引导';
   if (rhythmGuideActive) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -191,87 +212,25 @@ function toggleRhythmGuide() {
 
 function tickRhythmGuide() {
   if (!rhythmGuideActive || !audioCtx) return;
-  const interval = (60 / bpm) * 1000;
-  const beatInMeasure = rhythmBeatCount % (currentHymn.time === '3/4' ? 3 : 4);
+  const beatsPerBar   = currentHymn?.time === '3/4' ? 3 : 4;
+  const isDownbeat    = (rhythmBeatCount % beatsPerBar) === 0;
   rhythmBeatCount++;
-
-  const isDownbeat = beatInMeasure === 0;
-
-  // 音效
-  const osc = audioCtx.createOscillator();
+  const osc  = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.frequency.value = isDownbeat ? 110 : 660;  // 咚=低频，哒=高频
+  osc.frequency.value = isDownbeat ? 110 : 660;
   gain.gain.setValueAtTime(isDownbeat ? 0.4 : 0.15, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (isDownbeat ? 0.12 : 0.06));
   osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-
-  // 作业模式里的视觉节拍
-  if (examMode) {
-    const b1 = document.getElementById('exam-beat-1');
-    const b2 = document.getElementById('exam-beat-2');
-    const b3 = document.getElementById('exam-beat-3');
-    [b1,b2,b3].forEach(el => {
-      if (el) { el.style.background='#0a1a14'; el.style.borderColor='#0f3020'; el.style.color='#2a4a3a'; }
-    });
-    if (beatInMeasure === 0 && b1) { b1.style.background='rgba(61,220,132,0.2)'; b1.style.borderColor='#3ddc84'; b1.style.color='#3ddc84'; }
-    else if (beatInMeasure === 1 && b2) { b2.style.background='rgba(61,220,132,0.08)'; b2.style.borderColor='#1a6e40'; b2.style.color='#6ddc9a'; }
-    else if (beatInMeasure === 2 && b3) { b3.style.background='rgba(61,220,132,0.08)'; b3.style.borderColor='#1a6e40'; b3.style.color='#6ddc9a'; }
-  }
-
-  rhythmGuideTimer = setTimeout(tickRhythmGuide, interval);
+  rhythmGuideTimer = setTimeout(tickRhythmGuide, (60 / bpm) * 1000);
 }
 
-// ======================================================
-// ⟳ 和弦循环训练
-// ======================================================
-let chordLoopTimer = null;
-let chordLoopIdx = 0;
-
-function startChordLoop() {
-  stopChordLoop();
-  const chords = currentHymn.chords || ['C','F','G'];
-  const interval = 2500; // 每2.5秒换一个和弦，足够切换手型
-  chordLoopIdx = 0;
-
-  function showNext() {
-    const ch = chords[chordLoopIdx % chords.length];
-    document.getElementById('exam-chord').textContent = ch;
-
-    // 找 fn
-    const beat = currentHymn.jianpu.find(b => b.chord === ch);
-    const fnNames = { 'I':'I 级 · 主和弦', 'IV':'IV 级 · 下属和弦', 'V':'V 级 · 属和弦', 'vi':'vi 级 · 关系小调' };
-    document.getElementById('exam-fn').textContent = fnNames[beat?.fn] || (beat?.fn || '');
-
-    // 高亮
-    document.querySelectorAll('[id^="ecr-"]').forEach(el => {
-      const isActive = el.id === 'ecr-' + ch;
-      el.style.borderColor = isActive ? '#f0b429' : '#1a3a20';
-      el.style.color = isActive ? '#f0b429' : '#5a8a6a';
-      el.style.background = isActive ? 'rgba(240,180,41,0.08)' : '#0a1a10';
-      el.style.transform = isActive ? 'scale(1.1)' : 'scale(1)';
-    });
-
-    chordLoopIdx++;
-    chordLoopTimer = setTimeout(showNext, interval);
-  }
-
-  showNext();
-  document.getElementById('btn-loop-train').style.borderColor = '#f0b429';
-  document.getElementById('btn-loop-train').style.color = '#f0b429';
-}
-
-function stopChordLoop() {
-  if (chordLoopTimer) clearTimeout(chordLoopTimer);
-  chordLoopTimer = null;
-  const btn = document.getElementById('btn-loop-train');
-  if (btn) { btn.style.borderColor='#1a6e40'; btn.style.color='#3ddc84'; }
-}
-let audioCtx = null;
+// ── 节拍器 ──
 function toggleMetronome() {
   metronomePlaying = !metronomePlaying;
   if (metronomePlaying) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     tickMetronome();
   }
 }
@@ -288,40 +247,36 @@ function tickMetronome() {
   setTimeout(tickMetronome, (60 / bpm) * 1000);
 }
 
-// ======================================================
-// SESSION TIMER
-// ======================================================
+// ── Session 计时 ──
 function startSessionTimer() {
   sessionTimer = setInterval(() => {
     if (!sessionStart) return;
     const e = Math.floor((Date.now() - sessionStart) / 1000);
-    const m = Math.floor(e / 60), s = e % 60;
-    document.getElementById('fb-session').textContent = m + "'" + (s < 10 ? '0' : '') + s + '"';
+    const el = document.getElementById('fb-session');
+    if (el) el.textContent = Math.floor(e/60) + "'" + (e%60<10?'0':'') + e%60 + '"';
   }, 1000);
 }
 
-function setOutputMode(mode) {
-  outputMode = mode;
-  const midiSel = document.getElementById('midi-out-sel');
-  if (midiSel) midiSel.style.display = (mode==='midi'||mode==='both') ? 'inline-block' : 'none';
-  if ((mode==='midi'||mode==='both') && !midiAccess) requestMIDI();
+// ── 和弦循环（练习模式）──
+let chordLoopTimer = null;
+let chordLoopIdx   = 0;
+
+function loopChords() {
+  if (chordLoopTimer) {
+    clearTimeout(chordLoopTimer);
+    chordLoopTimer = null;
+    document.getElementById('prac-loop-btn')?.classList.remove('active');
+    return;
+  }
+  document.getElementById('prac-loop-btn')?.classList.add('active');
+  chordLoopIdx = 0;
+  stepChordLoop();
 }
 
-function setBPM(v) {
-  bpm = v;
-  const el = document.getElementById('bpm-display');
-  if (el) el.textContent = v;
+function stepChordLoop() {
+  if (!currentHymn?.chords) return;
+  const ch = currentHymn.chords[chordLoopIdx % currentHymn.chords.length];
+  if (typeof updatePracDisplay === 'function') updatePracDisplay(ch);
+  chordLoopIdx++;
+  chordLoopTimer = setTimeout(stepChordLoop, (60 / bpm) * 4 * 1000);
 }
-
-function transposeKey(k) {}
-function setMode(m) {}
-function toggleLoop() {
-  looping = !looping;
-  document.getElementById('btn-loop')?.classList.toggle('active', looping);
-}
-function skipBack() { beatIndex = 0; onBeat(); }
-function skipFwd()  {
-  beatIndex = Math.min(currentHymn.jianpu.length-1, beatIndex+(currentHymn.time==='3/4'?3:4));
-  onBeat();
-}
-function togglePlay() { playing ? stopPlayback() : startPlayback(); }
