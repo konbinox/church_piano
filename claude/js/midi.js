@@ -5,7 +5,7 @@
 let midiAccess  = null;
 let midiOutput  = null;
 let totalNotes  = 0, correctNotes = 0;
-let metronomePlaying = false;
+
 
 // ======================================================
 // MIDI
