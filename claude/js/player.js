@@ -280,3 +280,26 @@ function stepChordLoop() {
   chordLoopIdx++;
   chordLoopTimer = setTimeout(stepChordLoop, (60 / bpm) * 4 * 1000);
 }
+
+// ── 兼容 practice.js 的 MIDI编号接口 ──
+function playWebAudio(midiNote, durationMs) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+  const now  = audioCtx.currentTime;
+  const dur  = durationMs / 1000;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const merge= audioCtx.createGain();
+  const gain = audioCtx.createGain();
+  osc1.type = 'triangle'; osc1.frequency.value = freq;
+  osc2.type = 'sine';     osc2.frequency.value = freq * 2.01;
+  merge.gain.value = 0.5;
+  osc1.connect(merge); osc2.connect(merge); merge.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.28, now + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.10, now + 0.15);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  osc1.start(now); osc1.stop(now + dur + 0.05);
+  osc2.start(now); osc2.stop(now + dur + 0.05);
+}
