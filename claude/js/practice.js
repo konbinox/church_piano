@@ -2,24 +2,22 @@
 // practice.js — 弹法练习模块
 // ═══════════════════════════════════════════════════
 
-let pracStyle    = 'block';
-let pracPlaying  = false;
-let pracPlayTimer= null;
-let pracMeasBeat = 0;
-let pracChordIdx2= 0;
-let pracLoopActive = false;
-let pracLoopTimer  = null;
-let pracLoopI      = 0;
+let pracStyle     = 'block';
+let pracPlaying   = false;
+let pracPlayTimer = null;
+let pracMeasBeat  = 0;
+let pracChordIdx2 = 0;
+let pracLoopActive= false;
+let pracLoopTimer = null;
+let pracLoopI     = 0;
+let pracLooping   = false;
+let pracTimer     = null;
+let pracBeat      = 0;
+let pracChordI    = 0;
 
 // ======================================================
 // 🎹 弹法练习标签页引擎
 // ======================================================
-let pracStyle   = 'block';
-let pracPlaying = false;
-let pracLooping = false;
-let pracTimer   = null;
-let pracBeat    = 0;
-let pracChordI  = 0;
 
 // LK-280 61键布局：从C2(MIDI36)到C7(MIDI96)
 // 白键序列
