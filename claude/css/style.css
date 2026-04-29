@@ -761,3 +761,38 @@ input[type=range] {
 @keyframes fadeUp { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
 .fade-up { animation: fadeUp 0.3s ease; }
 
+
+/* ══ 强制字体放大（覆盖所有小字）══ */
+.logo-text     { font-size: 30px !important; }
+.logo-sub      { font-size: 18px !important; }
+.pill          { font-size: 18px !important; padding: 6px 16px !important; }
+.section-title { font-size: 20px !important; }
+.tab           { font-size: 22px !important; padding: 12px 22px !important; }
+.transport-btn { font-size: 30px !important; }
+.bpm-val       { font-size: 24px !important; }
+.key-sel, select { font-size: 20px !important; }
+.btn           { font-size: 20px !important; padding: 8px 18px !important; }
+.ai-msg, .ai-inp { font-size: 20px !important; }
+.feedback-item { font-size: 20px !important; }
+.fb-label      { font-size: 20px !important; }
+.fb-val        { font-size: 20px !important; }
+.fb-icon       { font-size: 22px !important; }
+.zoom-label    { font-size: 20px !important; }
+.q-val         { font-size: 28px !important; }
+.q-lbl         { font-size: 17px !important; }
+.vumeter-label { font-size: 18px !important; }
+.lk-display, .lk-row { font-size: 20px !important; }
+#lk-note, #lk-feedback, #lk-status { font-size: 20px !important; }
+.chord-prog    { font-size: 22px !important; }
+#chord-analysis{ font-size: 19px !important; }
+.jianpu-num    { font-size: 24px !important; }
+.time-display  { font-size: 22px !important; }
+.h-name        { font-size: 22px !important; }
+.style-btn     { font-size: 22px !important; padding: 8px 18px !important; }
+#style-hint    { font-size: 20px !important; }
+#prac-fn       { font-size: 28px !important; }
+#prac-notes    { font-size: 30px !important; }
+.psb           { font-size: 22px !important; padding: 10px 18px !important; }
+#prac-hint     { font-size: 20px !important; }
+#midi-log      { font-size: 19px !important; }
+.zoom-quality-row .q-card { font-size: 20px !important; }
