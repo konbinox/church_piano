@@ -20,7 +20,10 @@ let pracChordI    = 0;
 // ======================================================
 
 // LK-280 61键布局：从C2(MIDI36)到C7(MIDI96)
-// KB61_START / KB61_END / BLACK_PC 已在 keyboard.js 定义
+// 白键序列
+const KB61_START = 36; // C2
+const KB61_END   = 96; // C7
+const BLACK_PC   = new Set([1,3,6,8,10]); // 黑键音级
 
 // ── 61键 iframe 通信 ──────────────────────────────────
 let _kbLayout = null; // keep for kb61Click compat

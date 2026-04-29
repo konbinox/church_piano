@@ -172,7 +172,7 @@ function zoomToggle() {
   }
 }
 
-
+let vuAnim;
 function animateVU() {
   if (!zoomActive) return;
   const pct = playing ? 30 + Math.random() * 55 : 5 + Math.random() * 20;

@@ -695,7 +695,6 @@ input[type=range] {
 .prac-cell-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #2a4a3a; }
 
 /* exam overlay — keep but simplify */
-.exam-style-btn {
   padding: 6px 14px;
   background: transparent;
   border: 1px solid #243040;

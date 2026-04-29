@@ -38,7 +38,6 @@ function renderJianpu() {
 // STAFF CANVAS (simplified 5-line staff with notes)
 // ======================================================
 function drawStaff() {
-  if (!currentHymn) return;
   const canvas = document.getElementById('staff-canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = canvas.offsetWidth * window.devicePixelRatio;
@@ -135,7 +134,6 @@ function drawStaff() {
 // PIANO ROLL
 // ======================================================
 function drawPianoRoll() {
-  if (!currentHymn) return;
   const canvas = document.getElementById('piano-roll-canvas');
   if (!canvas) return;
   canvas.width = canvas.offsetWidth || 400;
