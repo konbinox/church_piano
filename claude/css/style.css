@@ -67,19 +67,19 @@ body::before {
   border-radius: 2px;
   display: flex; align-items: center; justify-content: center;
   color: var(--green);
-  font-size: 18px;
+  font-size: 34px;
   box-shadow: 0 0 12px var(--green-glow);
 }
 
 .logo-text {
   font-family: 'Libre Baskerville', serif;
-  font-size: 22px;
+  font-size: 34px;
   color: var(--text-bright);
   letter-spacing: 0.5px;
 }
 
 .logo-sub {
-  font-size: 14px;
+  font-size: 24px;
   color: var(--text-dim);
   letter-spacing: 2px;
   font-family: 'Share Tech Mono', monospace;
@@ -96,7 +96,7 @@ body::before {
 .pill {
   padding: 4px 10px;
   border-radius: 2px;
-  font-size: 16px;
+  font-size: 24px;
   font-family: 'Share Tech Mono', monospace;
   letter-spacing: 1px;
   border: 1px solid;
@@ -131,7 +131,7 @@ body::before {
 
 .section-title {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 16px;
+  font-size: 30px;
   letter-spacing: 2px;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -160,7 +160,7 @@ body::before {
 .hymn-item .h-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
 
 .tag {
-  font-size: 9px;
+  font-size: 16px;
   padding: 1px 5px;
   border-radius: 1px;
   font-family: 'Share Tech Mono', monospace;
@@ -191,7 +191,7 @@ body::before {
 
 .tab {
   padding: 10px 16px;
-  font-size: 12px;
+  font-size: 18px;
   font-family: 'Share Tech Mono', monospace;
   letter-spacing: 1px;
   color: var(--text-dim);
@@ -274,7 +274,7 @@ body::before {
 }
 
 .jianpu-chord {
-  font-size: 11px;
+  font-size: 16px;
   color: var(--gold);
   font-family: 'Libre Baskerville', serif;
   margin-bottom: 3px;
@@ -318,21 +318,21 @@ body::before {
 
 .chord-root {
   font-family: 'Libre Baskerville', serif;
-  font-size: 28px;
+  font-size: 48px;
   font-weight: 700;
   color: var(--gold);
   line-height: 1;
 }
 
 .chord-qual {
-  font-size: 13px;
+  font-size: 24px;
   color: var(--text-dim);
   font-family: 'Libre Baskerville', serif;
   font-style: italic;
 }
 
 .chord-fn {
-  font-size: 10px;
+  font-size: 20px;
   font-family: 'Share Tech Mono', monospace;
   color: var(--text-dim);
   margin-left: 4px;
@@ -374,7 +374,7 @@ body::before {
 }
 
 .bpm-val {
-  font-size: 20px;
+  font-size: 30px;
   color: var(--text-bright);
   min-width: 44px;
   text-align: center;
@@ -388,7 +388,7 @@ input[type=range] {
 
 .time-display {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 14px;
+  font-size: 24px;
   color: var(--accent);
   letter-spacing: 2px;
   margin-left: 4px;
@@ -587,7 +587,7 @@ input[type=range] {
   border: 1px solid var(--border2);
   color: var(--text);
   font-family: 'Share Tech Mono', monospace;
-  font-size: 11px;
+  font-size: 18px;
   letter-spacing: 1px;
   cursor: pointer;
   border-radius: 2px;
@@ -622,7 +622,7 @@ input[type=range] {
   border: 2px solid #0f3020;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 12px;
+  font-size: 18px;
   color: #1a4a2a;
   transition: all 0.08s;
   flex-shrink: 0;
@@ -663,7 +663,7 @@ input[type=range] {
   position: absolute;
   bottom: 4px; left: 50%;
   transform: translateX(-50%);
-  font-size: 8px;
+  font-size: 16px;
   font-family: 'Share Tech Mono', monospace;
   color: rgba(0,0,0,0.45);
   pointer-events: none;
@@ -684,7 +684,7 @@ input[type=range] {
   border: 2px solid #1e2d3d;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 12px;
+  font-size: 18px;
   color: #3a5a4a;
   background: #0a1218;
   transition: all 0.08s;
@@ -723,7 +723,7 @@ input[type=range] {
   border: 2px solid #1e2d3d;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 13px;
+  font-size: 20px;
   color: #3a5a4a;
   background: #0a1218;
   transition: all 0.1s;
@@ -750,7 +750,7 @@ input[type=range] {
   color: var(--text);
   padding: 7px 10px;
   font-family: 'Noto Serif SC', serif;
-  font-size: 12px;
+  font-size: 18px;
   border-radius: 2px;
   outline: none;
 }
@@ -763,36 +763,36 @@ input[type=range] {
 
 
 /* ══ 强制字体放大（覆盖所有小字）══ */
-.logo-text     { font-size: 30px !important; }
-.logo-sub      { font-size: 18px !important; }
-.pill          { font-size: 18px !important; padding: 6px 16px !important; }
-.section-title { font-size: 20px !important; }
-.tab           { font-size: 22px !important; padding: 12px 22px !important; }
-.transport-btn { font-size: 30px !important; }
-.bpm-val       { font-size: 24px !important; }
-.key-sel, select { font-size: 20px !important; }
-.btn           { font-size: 20px !important; padding: 8px 18px !important; }
-.ai-msg, .ai-inp { font-size: 20px !important; }
-.feedback-item { font-size: 20px !important; }
-.fb-label      { font-size: 20px !important; }
-.fb-val        { font-size: 20px !important; }
-.fb-icon       { font-size: 22px !important; }
-.zoom-label    { font-size: 20px !important; }
-.q-val         { font-size: 28px !important; }
-.q-lbl         { font-size: 17px !important; }
-.vumeter-label { font-size: 18px !important; }
-.lk-display, .lk-row { font-size: 20px !important; }
+.logo-text     { font-size: 50px !important; }
+.logo-sub      { font-size: 24px !important; }
+.pill          { font-size: 24px !important; padding: 6px 16px !important; }
+.section-title { font-size: 30px !important; }
+.tab           { font-size: 28px !important; padding: 12px 22px !important; }
+.transport-btn { font-size: 50px !important; }
+.bpm-val       { font-size: 30px !important; }
+.key-sel, select { font-size: 30px !important; }
+.btn           { font-size: 30px !important; padding: 8px 18px !important; }
+.ai-msg, .ai-inp { font-size: 30px !important; }
+.feedback-item { font-size: 30px !important; }
+.fb-label      { font-size: 30px !important; }
+.fb-val        { font-size: 30px !important; }
+.fb-icon       { font-size: 32px !important; }
+.zoom-label    { font-size: 30px !important; }
+.q-val         { font-size: 48px !important; }
+.q-lbl         { font-size: 24px !important; }
+.vumeter-label { font-size: 24px !important; }
+.lk-display, .lk-row { font-size: 30px !important; }
 #lk-note, #lk-feedback, #lk-status { font-size: 20px !important; }
-.chord-prog    { font-size: 22px !important; }
-#chord-analysis{ font-size: 19px !important; }
-.jianpu-num    { font-size: 24px !important; }
-.time-display  { font-size: 22px !important; }
-.h-name        { font-size: 22px !important; }
-.style-btn     { font-size: 22px !important; padding: 8px 18px !important; }
-#style-hint    { font-size: 20px !important; }
-#prac-fn       { font-size: 28px !important; }
-#prac-notes    { font-size: 30px !important; }
-.psb           { font-size: 22px !important; padding: 10px 18px !important; }
-#prac-hint     { font-size: 20px !important; }
-#midi-log      { font-size: 19px !important; }
-.zoom-quality-row .q-card { font-size: 20px !important; }
+.chord-prog    { font-size: 32px !important; }
+#chord-analysis{ font-size: 26px !important; }
+.jianpu-num    { font-size: 32px !important; }
+.time-display  { font-size: 32px !important; }
+.h-name        { font-size: 32px !important; }
+.style-btn     { font-size: 32px !important; padding: 8px 18px !important; }
+#style-hint    { font-size: 30px !important; }
+#prac-fn       { font-size: 48px !important; }
+#prac-notes    { font-size: 50px !important; }
+.psb           { font-size: 32px !important; padding: 10px 18px !important; }
+#prac-hint     { font-size: 30px !important; }
+#midi-log      { font-size: 26px !important; }
+.zoom-quality-row .q-card { font-size: 30px !important; }
