@@ -73,13 +73,13 @@ body::before {
 
 .logo-text {
   font-family: 'Libre Baskerville', serif;
-  font-size: 16px;
+  font-size: 22px;
   color: var(--text-bright);
   letter-spacing: 0.5px;
 }
 
 .logo-sub {
-  font-size: 10px;
+  font-size: 14px;
   color: var(--text-dim);
   letter-spacing: 2px;
   font-family: 'Share Tech Mono', monospace;
@@ -96,7 +96,7 @@ body::before {
 .pill {
   padding: 4px 10px;
   border-radius: 2px;
-  font-size: 11px;
+  font-size: 16px;
   font-family: 'Share Tech Mono', monospace;
   letter-spacing: 1px;
   border: 1px solid;
@@ -131,7 +131,7 @@ body::before {
 
 .section-title {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 10px;
+  font-size: 16px;
   letter-spacing: 2px;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -485,12 +485,12 @@ input[type=range] {
   border: 1px solid var(--border);
   border-radius: 2px;
   margin-bottom: 4px;
-  font-size: 11px;
+  font-size: 16px;
 }
 
-.fb-icon { font-size: 14px; }
-.fb-label { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
-.fb-val { margin-left: auto; font-family: 'Share Tech Mono', monospace; color: var(--green); }
+.fb-icon { font-size: 18px; }
+.fb-label { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 16px; }
+.fb-val { margin-left: auto; font-family: 'Share Tech Mono', monospace; color: var(--green); font-size: 16px; }
 
 /* Zoom panel */
 .zoom-status {
@@ -516,7 +516,7 @@ input[type=range] {
 
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-.zoom-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); }
+.zoom-label { font-family: 'Share Tech Mono', monospace; font-size: 16px; color: var(--text-dim); }
 
 .zoom-quality-row {
   display: grid;
@@ -532,8 +532,8 @@ input[type=range] {
   text-align: center;
 }
 
-.q-val { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: var(--text-bright); }
-.q-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.q-val { font-family: 'Share Tech Mono', monospace; font-size: 22px; color: var(--text-bright); }
+.q-lbl { font-size: 14px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
 .vumeter {
   height: 8px;
@@ -550,7 +550,7 @@ input[type=range] {
   transition: width 0.1s;
 }
 
-.vumeter-label { font-size: 10px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; margin-bottom: 6px; }
+.vumeter-label { font-size: 15px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; margin-bottom: 6px; }
 
 /* Chord progression panel */
 .chord-prog {
