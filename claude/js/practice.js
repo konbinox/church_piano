@@ -63,6 +63,7 @@ function getPracVoicing(chord) {
   const lh = v.root - 12; // 左手低八度
   return { root: v.root, rh, lh, name: v.name, lhHint: v.lh, rhHint: v.rh };
 }
+if (typeof updateFingering === 'function') updateFingering(chord);
 
 function updatePracDisplay(chord) {
   if (!chord) return;
@@ -447,5 +448,104 @@ function onFingerBeat(chordName) {
     });
     // 150ms后恢复静态
     setTimeout(() => highlightFingerStatic(chordName, style), 150);
+  }
+}
+// ══════════════════════════════════════════════
+// 指法显示系统
+// ══════════════════════════════════════════════
+
+const FINGERING = {
+  C:  { root:'C3',  rh:['C4','E4','G4']  },
+  F:  { root:'F3',  rh:['F4','A4','C5']  },
+  G:  { root:'G3',  rh:['G4','B4','D5']  },
+  D:  { root:'D3',  rh:['D4','F#4','A4'] },
+  Am: { root:'A2',  rh:['A3','C4','E4']  },
+  Em: { root:'E3',  rh:['E4','G4','B4']  },
+  Bb: { root:'Bb2', rh:['Bb3','D4','F4'] },
+  Eb: { root:'Eb3', rh:['Eb4','G4','Bb4']},
+};
+
+const RH_FINGERS = [1, 3, 5];
+let fingerAnimTimer = null;
+let fingerArpIdx    = 0;
+
+function updateFingering(chordName) {
+  const data  = FINGERING[chordName] || FINGERING['C'];
+  const style = (typeof pracStyle !== 'undefined') ? pracStyle : 'block';
+  const cn = document.getElementById('finger-chord-name');
+  const sh = document.getElementById('finger-style-hint');
+  if (cn) cn.textContent = chordName;
+  if (sh) sh.textContent = style === 'block' ? '柱式' : style === 'arpeggio' ? '分解' : '节奏';
+  clearFingerHighlight();
+  setFingerNote('lf', 5, data.root);
+  const lhHint = document.getElementById('lh-hint');
+  if (lhHint) lhHint.textContent = '根音 ' + data.root;
+  const rhNotes = data.rh;
+  RH_FINGERS.forEach((f, i) => setFingerNote('rf', f, rhNotes[i] || '—'));
+  const rhHint = document.getElementById('rh-hint');
+  if (rhHint) rhHint.textContent = style === 'arpeggio' ? '1 → 3 → 5 → 3' : '1 - 3 - 5';
+  highlightFingerStatic(chordName, style);
+}
+
+function setFingerNote(hand, finger, note) {
+  const el = document.getElementById(hand + '-' + finger + '-note');
+  if (el) el.textContent = note;
+}
+
+function clearFingerHighlight() {
+  ['lf-1','lf-2','lf-3','lf-4','lf-5',
+   'rf-1','rf-2','rf-3','rf-4','rf-5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'finger-key';
+  });
+}
+
+function highlightFingerStatic(chordName, style) {
+  const lf5 = document.getElementById('lf-5');
+  if (lf5) lf5.classList.add('lh-active');
+  if (style === 'arpeggio') {
+    const rf1 = document.getElementById('rf-1');
+    if (rf1) rf1.classList.add('root-active');
+  } else {
+    RH_FINGERS.forEach(f => {
+      const el = document.getElementById('rf-' + f);
+      if (el) el.classList.add(f === 1 ? 'root-active' : 'active');
+    });
+  }
+}
+
+function animateArpFinger() {
+  if (fingerAnimTimer) clearInterval(fingerAnimTimer);
+  fingerArpIdx = 0;
+  const seq = [1, 3, 5, 3];
+  const interval = (60 / bpm) * 1000 / 4;
+  fingerAnimTimer = setInterval(() => {
+    clearFingerHighlight();
+    const lf5 = document.getElementById('lf-5');
+    if (lf5) lf5.classList.add('lh-active');
+    const f  = seq[fingerArpIdx % seq.length];
+    const el = document.getElementById('rf-' + f);
+    if (el) el.classList.add('active');
+    fingerArpIdx++;
+  }, interval);
+}
+
+function stopFingerAnim() {
+  if (fingerAnimTimer) { clearInterval(fingerAnimTimer); fingerAnimTimer = null; }
+}
+
+function onFingerBeat(chordName) {
+  const style = (typeof pracStyle !== 'undefined') ? pracStyle : 'block';
+  if (style === 'arpeggio') {
+    animateArpFinger();
+  } else {
+    clearFingerHighlight();
+    const lf5 = document.getElementById('lf-5');
+    if (lf5) lf5.classList.add('lh-active');
+    RH_FINGERS.forEach(f => {
+      const el = document.getElementById('rf-' + f);
+      if (el) el.classList.add(f === 1 ? 'root-active' : 'active');
+    });
+    setTimeout(() => highlightFingerStatic(chordName, style), 200);
   }
 }
