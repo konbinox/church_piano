@@ -7,6 +7,58 @@
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <style>
+/* ── 指法显示 ─────────────────────────────── */
+.finger-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 52px;
+}
+.finger-num {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid #1e3a2a;
+  background: #0a1810;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 22px;
+  color: #2a5a3a;
+  transition: all 0.15s;
+}
+.finger-note {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 18px;
+  color: #3a5a4a;
+  text-align: center;
+  min-height: 24px;
+  transition: all 0.15s;
+}
+.finger-key.active .finger-num {
+  border-color: #3ddc84;
+  background: rgba(61,220,132,0.18);
+  color: #3ddc84;
+  box-shadow: 0 0 12px rgba(61,220,132,0.4);
+  transform: scale(1.15);
+}
+.finger-key.active .finger-note { color: #3ddc84; }
+.finger-key.lh-active .finger-num {
+  border-color: #4a9eff;
+  background: rgba(74,158,255,0.18);
+  color: #4a9eff;
+  box-shadow: 0 0 12px rgba(74,158,255,0.4);
+  transform: scale(1.15);
+}
+.finger-key.lh-active .finger-note { color: #4a9eff; }
+.finger-key.root-active .finger-num {
+  border-color: #f0b429;
+  background: rgba(240,180,41,0.18);
+  color: #f0b429;
+  box-shadow: 0 0 12px rgba(240,180,41,0.4);
+  transform: scale(1.2);
+}
+.finger-key.root-active .finger-note { color: #f0b429; }
+
 /* ── 全局字体放大 ─────────────────────────────── */
 body { font-size: 18px; }
 
@@ -138,57 +190,6 @@ body {
 .ai-msg    { font-size: 20px; }
 .ai-inp    { font-size: 20px; }
 .btn       { font-size: 20px; }
-/* ── 指法显示 ─────────────────────────────── */
-.finger-key {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 52px;
-}
-.finger-num {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 2px solid #1e3a2a;
-  background: #0a1810;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 22px;
-  color: #2a5a3a;
-  transition: all 0.15s;
-}
-.finger-note {
-  font-family: 'Libre Baskerville', serif;
-  font-size: 18px;
-  color: #3a5a4a;
-  text-align: center;
-  min-height: 24px;
-  transition: all 0.15s;
-}
-.finger-key.active .finger-num {
-  border-color: #3ddc84;
-  background: rgba(61,220,132,0.18);
-  color: #3ddc84;
-  box-shadow: 0 0 12px rgba(61,220,132,0.4);
-  transform: scale(1.15);
-}
-.finger-key.active .finger-note { color: #3ddc84; }
-.finger-key.lh-active .finger-num {
-  border-color: #4a9eff;
-  background: rgba(74,158,255,0.18);
-  color: #4a9eff;
-  box-shadow: 0 0 12px rgba(74,158,255,0.4);
-  transform: scale(1.15);
-}
-.finger-key.lh-active .finger-note { color: #4a9eff; }
-.finger-key.root-active .finger-num {
-  border-color: #f0b429;
-  background: rgba(240,180,41,0.18);
-  color: #f0b429;
-  box-shadow: 0 0 12px rgba(240,180,41,0.4);
-  transform: scale(1.2);
-}
-.finger-key.root-active .finger-note { color: #f0b429; }
 </style>
 </head>
 <body>
@@ -386,44 +387,75 @@ body {
             <button onclick="loopChords()"     class="btn btn-gold" id="prac-loop-btn" style="font-size:22px;padding:8px 16px">⟳ 循环</button>
           </div>
         </div>
+
         <!-- 指法显示区 -->
-<div id="fingering-panel" style="padding:12px 20px;background:#080d14;border-bottom:1px solid #1e2d3d;flex-shrink:0">
-  <div style="display:flex;justify-content:space-around;align-items:flex-start;gap:20px;max-width:700px;margin:0 auto">
+        <div id="fingering-panel" style="padding:12px 20px;background:#080d14;border-bottom:1px solid #1e2d3d;flex-shrink:0">
+          <div style="display:flex;justify-content:space-around;align-items:flex-start;gap:20px;max-width:700px;margin:0 auto">
 
-    <!-- 左手 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#5a7a94;letter-spacing:2px">左手 L</div>
-      <div style="display:flex;gap:10px;align-items:flex-end">
-        <div class="finger-key" id="lf-5"><div class="finger-num">5</div><div class="finger-note" id="lf-5-note">—</div></div>
-        <div class="finger-key" id="lf-4"><div class="finger-num">4</div><div class="finger-note" id="lf-4-note">—</div></div>
-        <div class="finger-key" id="lf-3"><div class="finger-num">3</div><div class="finger-note" id="lf-3-note">—</div></div>
-        <div class="finger-key" id="lf-2"><div class="finger-num">2</div><div class="finger-note" id="lf-2-note">—</div></div>
-        <div class="finger-key" id="lf-1"><div class="finger-num">1</div><div class="finger-note" id="lf-1-note">—</div></div>
-      </div>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#3a5a4a;margin-top:4px" id="lh-hint">根音</div>
-    </div>
+            <!-- 左手 -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#5a7a94;letter-spacing:2px">左手 L</div>
+              <div style="display:flex;gap:10px;align-items:flex-end">
+                <div class="finger-key" id="lf-5" style="flex-direction:column-reverse">
+                  <div class="finger-num">5</div>
+                  <div class="finger-note" id="lf-5-note">—</div>
+                </div>
+                <div class="finger-key" id="lf-4">
+                  <div class="finger-num">4</div>
+                  <div class="finger-note" id="lf-4-note">—</div>
+                </div>
+                <div class="finger-key" id="lf-3">
+                  <div class="finger-num">3</div>
+                  <div class="finger-note" id="lf-3-note">—</div>
+                </div>
+                <div class="finger-key" id="lf-2">
+                  <div class="finger-num">2</div>
+                  <div class="finger-note" id="lf-2-note">—</div>
+                </div>
+                <div class="finger-key" id="lf-1">
+                  <div class="finger-num">1</div>
+                  <div class="finger-note" id="lf-1-note">—</div>
+                </div>
+              </div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#3a5a4a;margin-top:4px" id="lh-hint">根音</div>
+            </div>
 
-    <!-- 中间 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:30px">
-      <div style="font-family:'Libre Baskerville',serif;font-size:36px;color:#f0b429;font-weight:700" id="finger-chord-name">C</div>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#5a7a94" id="finger-style-hint">柱式</div>
-    </div>
+            <!-- 中间分隔 -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:30px">
+              <div style="font-family:'Libre Baskerville',serif;font-size:36px;color:#f0b429;font-weight:700" id="finger-chord-name">C</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#5a7a94" id="finger-style-hint">柱式</div>
+            </div>
 
-    <!-- 右手 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#5a7a94;letter-spacing:2px">右手 R</div>
-      <div style="display:flex;gap:10px;align-items:flex-end">
-        <div class="finger-key" id="rf-1"><div class="finger-num">1</div><div class="finger-note" id="rf-1-note">—</div></div>
-        <div class="finger-key" id="rf-2"><div class="finger-num">2</div><div class="finger-note" id="rf-2-note">—</div></div>
-        <div class="finger-key" id="rf-3"><div class="finger-num">3</div><div class="finger-note" id="rf-3-note">—</div></div>
-        <div class="finger-key" id="rf-4"><div class="finger-num">4</div><div class="finger-note" id="rf-4-note">—</div></div>
-        <div class="finger-key" id="rf-5"><div class="finger-num">5</div><div class="finger-note" id="rf-5-note">—</div></div>
-      </div>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#3a5a4a;margin-top:4px" id="rh-hint">1-3-5</div>
-    </div>
+            <!-- 右手 -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#5a7a94;letter-spacing:2px">右手 R</div>
+              <div style="display:flex;gap:10px;align-items:flex-end">
+                <div class="finger-key" id="rf-1">
+                  <div class="finger-num">1</div>
+                  <div class="finger-note" id="rf-1-note">—</div>
+                </div>
+                <div class="finger-key" id="rf-2">
+                  <div class="finger-num">2</div>
+                  <div class="finger-note" id="rf-2-note">—</div>
+                </div>
+                <div class="finger-key" id="rf-3">
+                  <div class="finger-num">3</div>
+                  <div class="finger-note" id="rf-3-note">—</div>
+                </div>
+                <div class="finger-key" id="rf-4">
+                  <div class="finger-num">4</div>
+                  <div class="finger-note" id="rf-4-note">—</div>
+                </div>
+                <div class="finger-key" id="rf-5">
+                  <div class="finger-num">5</div>
+                  <div class="finger-note" id="rf-5-note">—</div>
+                </div>
+              </div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#3a5a4a;margin-top:4px" id="rh-hint">1-3-5</div>
+            </div>
 
-  </div>
-</div>
+          </div>
+        </div>
 
         <!-- 底部：61键盘 -->
         <div style="flex:1;min-height:140px;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;padding:12px;background:#060a0f;overflow:auto">
