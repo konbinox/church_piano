@@ -126,6 +126,8 @@ function updatePracDisplay(chord) {
     el.style.color       = active ? '#f0b429' : '#5a8a6a';
     el.style.background  = active ? 'rgba(240,180,41,0.1)' : 'transparent';
   });
+  // 在 updatePracDisplay 函数末尾加：
+  updateFingering(chord);
 }
 
 function renderPracBeatCells(chord) {
@@ -312,4 +314,138 @@ function cycleNextChord() {
   updatePracDisplay(chords[pracLoopI % chords.length]);
   pracLoopI++;
   pracLoopTimer = setTimeout(cycleNextChord, (60/bpm)*1000 * (currentHymn.time==='3/4'?3:4));
+}
+// ══════════════════════════════════════════════
+// 指法显示系统
+// ══════════════════════════════════════════════
+
+// 各和弦的指法定义
+// lh: 左手 [finger号, 音名] 只用根音（手指5）
+// rh: 右手 [finger号, 音名] 根据弹法变化
+const FINGERING = {
+  C:  { root:'C3', rh:['C4','E4','G4'] },
+  F:  { root:'F3', rh:['F4','A4','C5'] },
+  G:  { root:'G3', rh:['G4','B4','D5'] },
+  D:  { root:'D3', rh:['D4','F#4','A4'] },
+  Am: { root:'A2', rh:['A3','C4','E4'] },
+  Em: { root:'E3', rh:['E4','G4','B4'] },
+  Bb: { root:'Bb2',rh:['Bb3','D4','F4'] },
+  Eb: { root:'Eb3',rh:['Eb4','G4','Bb4'] },
+};
+
+// 右手指法编号（1=拇指...5=小指）
+// 柱式/节奏：1-3-5  分解：1-3-5-3 循环
+const RH_FINGERS = [1, 3, 5];
+
+let fingerAnimTimer = null;
+let fingerArpIdx    = 0;
+
+// 更新静态指法显示
+function updateFingering(chordName) {
+  const data = FINGERING[chordName] || FINGERING['C'];
+  const style = (typeof pracStyle !== 'undefined') ? pracStyle : 'block';
+
+  // 更新和弦名 + 弹法提示
+  const cn = document.getElementById('finger-chord-name');
+  const sh = document.getElementById('finger-style-hint');
+  if (cn) cn.textContent = chordName;
+  if (sh) sh.textContent = style === 'block' ? '柱式' : style === 'arpeggio' ? '分解' : '节奏';
+
+  // 清除所有高亮
+  clearFingerHighlight();
+
+  // 左手：手指5按根音
+  setFingerNote('lf', 5, data.root);
+  const lhHint = document.getElementById('lh-hint');
+  if (lhHint) lhHint.textContent = '根音 ' + data.root;
+
+  // 右手：根据弹法
+  const rhNotes = data.rh;
+  if (style === 'block' || style === 'rhythm') {
+    // 柱式/节奏：1-3-5 同时
+    RH_FINGERS.forEach((f, i) => setFingerNote('rf', f, rhNotes[i] || '—'));
+    const rhHint = document.getElementById('rh-hint');
+    if (rhHint) rhHint.textContent = '1 - 3 - 5';
+  } else {
+    // 分解：显示全部，动画逐个亮
+    RH_FINGERS.forEach((f, i) => setFingerNote('rf', f, rhNotes[i] || '—'));
+    const rhHint = document.getElementById('rh-hint');
+    if (rhHint) rhHint.textContent = '1 → 3 → 5 → 3';
+  }
+
+  // 静态高亮
+  highlightFingerStatic(chordName, style);
+}
+
+function setFingerNote(hand, finger, note) {
+  const noteEl = document.getElementById(hand + '-' + finger + '-note');
+  if (noteEl) noteEl.textContent = note;
+}
+
+function clearFingerHighlight() {
+  ['lf-1','lf-2','lf-3','lf-4','lf-5',
+   'rf-1','rf-2','rf-3','rf-4','rf-5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'finger-key';
+  });
+}
+
+function highlightFingerStatic(chordName, style) {
+  // 左手5高亮（蓝色=根音）
+  const lf5 = document.getElementById('lf-5');
+  if (lf5) lf5.classList.add('lh-active');
+
+  // 右手高亮
+  if (style === 'block' || style === 'rhythm') {
+    RH_FINGERS.forEach(f => {
+      const el = document.getElementById('rf-' + f);
+      if (el) el.classList.add(f === 1 ? 'root-active' : 'active');
+    });
+  } else {
+    // 分解：只高亮第一个，其余暗
+    const rf1 = document.getElementById('rf-1');
+    if (rf1) rf1.classList.add('root-active');
+  }
+}
+
+// 动态播放：分解弹法逐个亮起
+function animateArpFinger(chordName) {
+  if (fingerAnimTimer) clearInterval(fingerAnimTimer);
+  fingerArpIdx = 0;
+  const seq = [1, 3, 5, 3]; // 分解序列
+  const interval = (60 / bpm) * 1000 / 4;
+
+  fingerAnimTimer = setInterval(() => {
+    clearFingerHighlight();
+    const lf5 = document.getElementById('lf-5');
+    if (lf5) lf5.classList.add('lh-active');
+
+    const f = seq[fingerArpIdx % seq.length];
+    const el = document.getElementById('rf-' + f);
+    if (el) el.classList.add('active');
+    fingerArpIdx++;
+  }, interval);
+}
+
+function stopFingerAnim() {
+  if (fingerAnimTimer) { clearInterval(fingerAnimTimer); fingerAnimTimer = null; }
+}
+
+// 节拍时调用（在 tickPracPlay 里）
+function onFingerBeat(chordName) {
+  const style = (typeof pracStyle !== 'undefined') ? pracStyle : 'block';
+  if (style === 'arpeggio') {
+    animateArpFinger(chordName);
+  } else {
+    // 柱式/节奏：闪一下所有手指
+    clearFingerHighlight();
+    const lf5 = document.getElementById('lf-5');
+    if (lf5) lf5.classList.add('lh-active');
+    RH_FINGERS.forEach(f => {
+      const el = document.getElementById('rf-' + f);
+      if (el) el.classList.add(f === 1 ? 'root-active' : 'active');
+    });
+    // 150ms后恢复静态
+    setTimeout(() => highlightFingerStatic(chordName, style), 150);
+  }
 }
