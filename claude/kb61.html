@@ -11,7 +11,7 @@ canvas { display:block; }
 <body>
 <canvas id="c"></canvas>
 <script>
-const WW=24, BW=15, WH=100, BH=62;
+const WW=36, BW=22, WH=140, BH=90;
 const START=36, END=96;
 const BLACK=new Set([1,3,6,8,10]);
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -22,8 +22,8 @@ function getLayout() {
   const L=[]; let wx=0;
   for(let m=START;m<=END;m++){
     const pc=m%12, isB=BLACK.has(pc);
-    if(isB){ L.push({m,isB:true, x:wx-BW/2}); }
-    else   { L.push({m,isB:false,x:wx}); wx+=WW; }
+    if(isB){ L.push({m,isB:true,  x:wx-BW/2}); }
+    else   { L.push({m,isB:false, x:wx}); wx+=WW; }
   }
   return L;
 }
@@ -33,68 +33,92 @@ const totalW = layout.filter(k=>!k.isB).length * WW;
 
 function draw() {
   const c=document.getElementById('c');
-  c.width=totalW; c.height=WH+10;
-  c.style.width=totalW+'px'; c.style.height=(WH+10)+'px';
+  const dotZone=32;
+  c.width=totalW; c.height=WH+dotZone;
+  c.style.width=totalW+'px'; c.style.height=(WH+dotZone)+'px';
   const ctx=c.getContext('2d');
 
-  ctx.fillStyle='#1a1a2a';
-  ctx.fillRect(0,0,totalW,WH+10);
+  ctx.fillStyle='#060a0f';
+  ctx.fillRect(0,0,totalW,WH+dotZone);
 
-  // White keys
+  const oy=dotZone;
+
+  // White keys — plain, no color
   layout.filter(k=>!k.isB).forEach(k=>{
-    const isLH=lhNote===k.m, isR=rootNotes.includes(k.m), isC=chordNotes.includes(k.m);
-    const g=ctx.createLinearGradient(k.x,0,k.x,WH);
-    if(isLH){g.addColorStop(0,'#4a9eff');g.addColorStop(1,'#1a5aaa');}
-    else if(isR){g.addColorStop(0,'#f0b429');g.addColorStop(1,'#c08010');}
-    else if(isC){g.addColorStop(0,'#3ddc84');g.addColorStop(1,'#1a8a4a');}
-    else{g.addColorStop(0,'#d8d8d8');g.addColorStop(1,'#f0f0f0');}
+    const g=ctx.createLinearGradient(k.x,oy,k.x,oy+WH);
+    g.addColorStop(0,'#d8d8d8');
+    g.addColorStop(1,'#f5f5f5');
     ctx.fillStyle=g;
-    ctx.fillRect(k.x,0,WW-1,WH);
+    ctx.fillRect(k.x,oy,WW-1,WH);
     ctx.strokeStyle='#888'; ctx.lineWidth=1;
-    ctx.strokeRect(k.x+.5,.5,WW-1.5,WH-.5);
+    ctx.strokeRect(k.x+.5,oy+.5,WW-1.5,WH-.5);
+
     const pc=k.m%12, oct=Math.floor(k.m/12)-1;
-    if(pc===0||isLH||isR||isC){
-      ctx.fillStyle=(isLH||isR||isC)?'rgba(0,0,0,.75)':'rgba(0,0,0,.35)';
-      ctx.font='bold 8px monospace'; ctx.textAlign='center';
-      ctx.fillText(pc===0?`C${oct}`:NAMES[pc], k.x+WW/2, WH-4);
+    const isActive=lhNote===k.m||rootNotes.includes(k.m)||chordNotes.includes(k.m);
+    if(pc===0||isActive){
+      ctx.fillStyle=isActive?'rgba(0,0,0,0.75)':'rgba(0,0,0,0.3)';
+      ctx.font=isActive?'bold 11px monospace':'10px monospace';
+      ctx.textAlign='center';
+      ctx.fillText(pc===0?`C${oct}`:NAMES[pc], k.x+WW/2, oy+WH-6);
     }
   });
 
-  // Black keys
+  // Black keys — plain dark
   layout.filter(k=>k.isB).forEach(k=>{
-    const isLH=lhNote===k.m, isR=rootNotes.includes(k.m), isC=chordNotes.includes(k.m);
-    const g=ctx.createLinearGradient(k.x,0,k.x,BH);
-    if(isLH){g.addColorStop(0,'#4a9eff');g.addColorStop(1,'#0a3070');}
-    else if(isR){g.addColorStop(0,'#c08010');g.addColorStop(1,'#7a4000');}
-    else if(isC){g.addColorStop(0,'#1a8a4a');g.addColorStop(1,'#0a4020');}
-    else{g.addColorStop(0,'#222');g.addColorStop(1,'#444');}
+    const g=ctx.createLinearGradient(k.x,oy,k.x,oy+BH);
+    g.addColorStop(0,'#1a1a1a');
+    g.addColorStop(1,'#333');
     ctx.fillStyle=g;
+    ctx.fillRect(k.x,oy,BW,BH);
+    ctx.strokeStyle='#000'; ctx.lineWidth=1;
+    ctx.strokeRect(k.x+.5,oy+.5,BW-1,BH-1);
+  });
+
+  // Dots above keys — only on active keys
+  const DOT_R=10, DOT_Y=dotZone/2;
+
+  function drawDot(k, color, label) {
+    const cx=k.isB ? k.x+BW/2 : k.x+WW/2;
+    ctx.shadowColor=color; ctx.shadowBlur=14;
     ctx.beginPath();
-    ctx.rect(k.x,0,BW,BH);
+    ctx.arc(cx,DOT_Y,DOT_R,0,Math.PI*2);
+    ctx.fillStyle=color;
     ctx.fill();
-    if(isLH||isR||isC){
-      ctx.shadowColor=isLH?'#4a9eff':isR?'#f0b429':'#3ddc84';
-      ctx.shadowBlur=10; ctx.fill(); ctx.shadowBlur=0;
-    }
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(0,0,0,0.85)';
+    ctx.font='bold 11px monospace';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(label,cx,DOT_Y);
+    ctx.textBaseline='alphabetic';
+  }
+
+  // 左手根音 — 蓝点，手指5
+  if(lhNote>=START && lhNote<=END){
+    const k=layout.find(x=>x.m===lhNote);
+    if(k) drawDot(k,'#4a9eff','5');
+  }
+
+  // 右手根音 — 金点，手指1
+  if(rootNotes.length>0){
+    const k=layout.find(x=>x.m===rootNotes[0]);
+    if(k) drawDot(k,'#f0b429','1');
+  }
+
+  // 右手和弦音 — 绿点，手指3和5
+  const extras=chordNotes.filter(m=>!rootNotes.includes(m));
+  const fingers=['3','5'];
+  extras.forEach((m,i)=>{
+    if(m<START||m>END) return;
+    const k=layout.find(x=>x.m===m);
+    if(k) drawDot(k,'#3ddc84',fingers[i]||'');
   });
 }
 
-// Click handler
-document.addEventListener('click', e=>{
-  const c=document.getElementById('c');
-  const rect=c.getBoundingClientRect();
-  const sx=c.width/rect.width;
-  const cx=(e.clientX-rect.left)*sx;
-  const cy=(e.clientY-rect.top)*(c.height/rect.height);
-  let hit=null;
-  for(const k of layout){ if(k.isB&&cx>=k.x&&cx<=k.x+BW&&cy<=BH){hit=k;break;} }
-  if(!hit){ for(const k of layout){ if(!k.isB&&cx>=k.x&&cx<=k.x+WW&&cy<=WH){hit=k;break;} } }
-  if(hit) window.parent.postMessage({type:'kb61click',midi:hit.m},'*');
-});
-
-// Listen for chord updates from parent
+// 接收父页面消息
 window.addEventListener('message', e=>{
-  if(e.data && e.data.type==='kb61update'){
+  if(!e.data) return;
+  if(e.data.type==='kb61update'){
     rootNotes  = e.data.rootNotes  || [];
     chordNotes = e.data.chordNotes || [];
     lhNote     = e.data.lhNote     ?? -1;
@@ -102,8 +126,8 @@ window.addEventListener('message', e=>{
   }
 });
 
-// Initial draw
 draw();
+window.parent.postMessage({type:'kb61ready'},'*');
 </script>
 </body>
 </html>
