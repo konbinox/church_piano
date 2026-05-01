@@ -100,6 +100,17 @@ function updatePracDisplay(chord) {
   }
   build61Keys(rootAll, [...new Set(allChord)], v.lh);
 
+  // 发送给新版 kb61.html（圆点模式）
+  const kb61Frame = document.getElementById('kb61-frame');
+  if (kb61Frame && kb61Frame.contentWindow) {
+    kb61Frame.contentWindow.postMessage({
+      type:       'kb61update',
+      lhNote:     v.lh,
+      rootNotes:  [v.root],
+      chordNotes: v.rh,
+    }, '*');
+  }
+
   // 标注
   const lblEl = document.getElementById('kb61-label');
   if (lblEl) lblEl.innerHTML =
